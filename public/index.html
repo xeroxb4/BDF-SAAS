@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SaaS Distribution Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Nunito:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="/css/main.css">
+
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="login-brand-icon pulse"><i class="ti ti-building-factory-2"></i></div>
+      <div>
+        <div class="login-brand-name">DistroSaaS</div>
+        <div class="login-brand-sub">Sales & Distribution Platform</div>
+      </div>
+    </div>
+    <h2>Welcome back</h2>
+    <p>Sign in to access your dashboard</p>
+    <div class="login-err" id="login-err"></div>
+    <div class="form-group" style="margin-bottom:10px;">
+      <label>Username</label>
+      <input type="text" id="login-user" placeholder="your username" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-hint">First time? <a href="#" onclick="event.preventDefault();document.getElementById('register-wrap').style.display='block';this.parentNode.style.display='none';">Create super admin account</a></div>
+    <div id="register-wrap" style="display:none;margin-top:20px;padding-top:18px;border-top:1px solid var(--border);">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:12px;font-weight:600;">Create your super admin account</p>
+      <div id="reg-err" style="display:none;background:rgba(255,82,82,.1);border:1px solid rgba(255,82,82,.3);color:#ff5252;font-size:13px;padding:10px 14px;border-radius:9px;margin-bottom:12px;"></div>
+      <div class="form-group" style="margin-bottom:9px;"><label>Full Name</label><input type="text" id="reg-name" placeholder="Your full name"></div>
+      <div class="form-group" style="margin-bottom:9px;"><label>Username</label><input type="text" id="reg-user" placeholder="Choose a username (no spaces)"></div>
+      <div class="form-group" style="margin-bottom:9px;"><label>Password</label><input type="password" id="reg-pass" placeholder="Min 6 characters" onkeydown="if(event.key==='Enter')doRegister()"></div>
+      <button class="login-btn" id="reg-btn" onclick="doRegister()">Create Super Admin Account</button>
+      <div style="text-align:center;margin-top:12px;font-size:12px;color:var(--text3);">
+        Already have an account? <a href="#" onclick="event.preventDefault();document.getElementById('register-wrap').style.display='none';document.querySelector('.login-hint').style.display='block';" style="color:var(--accent);">Sign in instead</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TOAST ═══ -->
+<div id="toast"></div>
+
+<!-- ═══ SIDEBAR BACKDROP ═══ -->
+<div id="sidebar-backdrop" onclick="closeSidebar()"></div>
+
+<!-- ═══ TOPBAR ═══ -->
+<header class="topbar">
+  <button class="hamburger" onclick="toggleSidebar()"><i class="ti ti-menu-2"></i></button>
+  <a class="topbar-logo" onclick="goHome()" style="cursor:pointer;">
+    <div class="topbar-logo-mark pulse"><i class="ti ti-building-factory-2"></i></div>
+    <div class="topbar-logo-text">DistroSaaS</div>
+  </a>
+  <div class="topbar-sep"></div>
+  <span class="topbar-section" id="topbar-section">Dashboard</span>
+  <!-- Company pill (hidden for super admin) -->
+  <div class="company-pill" id="company-pill" style="display:none;">
+    <div class="company-pill-dot" id="company-dot"></div>
+    <span id="company-name"></span>
+  </div>
+  <div class="topbar-clock" id="clock">00:00:00</div>
+  <div class="topbar-actions">
+    <button class="btn btn-sm btn-green" onclick="exportAllExcel()" style="padding:5px 11px;">
+      <i class="ti ti-file-spreadsheet"></i><span style="display:none;"> Export</span>
+    </button>
+    <div class="topbar-user" onclick="doLogout()" title="Sign out">
+      <i class="ti ti-logout"></i>
+      <span id="topbar-username">User</span>
+    </div>
+  </div>
+</header>
+
+<!-- ═══ LAYOUT ═══ -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="sidebar">
+    <div id="sidebar-nav">
+      <!-- Built dynamically by buildSidebar() -->
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- ─── DASHBOARD ─── -->
+    <div id="dashboard" class="section active">
+      <div class="page-header">
+        <h1><i class="ti ti-layout-dashboard" style="color:var(--accent);"></i> Dashboard</h1>
+        <p id="dash-subtitle">Loading…</p>
+      </div>
+      <!-- Super admin content OR company dashboard -->
+      <div id="super-dash-content"></div>
+      <div id="dash-content"></div>
+    </div>
+
+    <!-- ─── COMPANIES (super admin only) ─── -->
+    <div id="companies-section" class="section">
+      <div class="page-header">
+        <h1><i class="ti ti-buildings" style="color:var(--blue);"></i> Companies</h1>
+        <p>Manage all tenant companies on the platform</p>
+      </div>
+      <div class="flex-between" style="margin-bottom:14px;">
+        <span style="font-size:13px;color:var(--text2);">Click a company card to view its full dashboard</span>
+        <button class="btn btn-accent" onclick="openModal('add-company-modal')">
+          <i class="ti ti-plus"></i> New Company
+        </button>
+      </div>
+      <div id="companies-list"></div>
+    </div>
+
+    <!-- ─── DISTRIBUTORS ─── -->
+    <div id="distributors-section" class="section">
+      <div class="page-header">
+        <h1><i class="ti ti-building-store" style="color:var(--violet);"></i> Distributors & Wholesalers</h1>
+        <p>Full contact profiles with stock, agent and shop summaries — click any card for full detail</p>
+      </div>
+      <div class="flex-between">
+        <div class="tab-bar" style="margin:0;">
+          <button class="tab-btn active" onclick="this.parentNode.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');">All</button>
+        </div>
+        <button class="btn btn-violet" onclick="openModal('add-dist-modal')"><i class="ti ti-plus"></i> New Distributor</button>
+      </div>
+      <div class="dist-grid" id="dist-cards"></div>
+    </div>
+
+    <!-- ─── AGENTS ─── -->
+    <div id="agents-section" class="section">
+      <div class="page-header">
+        <h1><i class="ti ti-id-badge-2" style="color:var(--pink);"></i> OMRs & Salesmen</h1>
+        <p>Field personnel — click any card for full detail, targets, shops and Top 10 status</p>
+      </div>
+      <div class="toolbar">
+        <div class="tab-bar" id="agent-tab-bar" style="margin:0;flex:1;"></div>
+        <div class="search-box">
+          <i class="ti ti-search"></i>
+          <input type="text" id="agent-search" placeholder="Search name, phone…" oninput="renderAgents()">
+        </div>
+        <select id="agent-sort" onchange="renderAgents()" style="padding:6px 10px;font-size:12px;">
+          <option value="name-asc">Name A→Z</option>
+          <option value="name-desc">Name Z→A</option>
+          <option value="role">Role</option>
+          <option value="val-desc">Top Value ↓</option>
+          <option value="pending">Most Pending ↓</option>
+        </select>
+        <select id="agent-dist-filter" onchange="renderAgents()" style="padding:6px 10px;font-size:12px;">
+          <option value="">All Distributors</option>
+        </select>
+        <button class="btn btn-pink" onclick="openModal('add-agent-modal')"><i class="ti ti-plus"></i> New Agent</button>
+      </div>
+      <div class="agent-grid" id="agent-cards"></div>
+    </div>
+
+    <!-- ─── SHOPS ─── -->
+    <div id="shops-section" class="section">
+      <div class="page-header">
+        <h1><i class="ti ti-building" style="color:var(--blue);"></i> Shops</h1>
+        <p>All shops across all distributors — filter by distributor or assigned agent</p>
+      </div>
+      <div class="toolbar">
+        <div class="search-box">
+          <i class="ti ti-search"></i>
+          <input type="text" id="shop-search" placeholder="Search shops…" oninput="renderShops()">
+        </div>
+        <select id="shop-dist-filter" onchange="renderShops()" style="padding:6px 10px;font-size:12px;">
+          <option value="">All Distributors</option>
+        </select>
+        <select id="shop-agent-filter" onchange="renderShops()" style="padding:6px 10px;font-size:12px;">
+          <option value="">All Agents</option>
+        </select>
+        <button class="btn btn-blue" onclick="openModal('add-shop-modal')" style="margin-left:auto;"><i class="ti ti-plus"></i> New Shop</button>
+      </div>
+      <div id="shop-cards"></div>
+    </div>
+
+    <!-- ─── STOCK ─── -->
+    <div id="stock-section" class="section">
+      <div class="page-header">
+        <h1><i class="ti ti-package" style="color:var(--amber);"></i> Stock Levels</h1>
+        <p>Update stock per distributor manually or import from Excel</p>
+      </div>
+      <div class="toolbar" style="margin-bottom:14px;">
+        <span style="font-size:12px;color:var(--text2);">
+          <i class="ti ti-info-circle" style="color:var(--accent);"></i>
+          Excel needs a <strong>Product</strong> column + <strong>Qty</strong> column
+        </span>
+        <button class="btn btn-amber" onclick="downloadStockTemplate()"><i class="ti ti-download"></i> Download Template</button>
+        <button class="btn btn-green" onclick="exportAllExcel()" style="margin-left:auto;"><i class="ti ti-file-spreadsheet"></i> Export Full Report</button>
+      </div>
+      <div id="dist-stock-tables"></div>
+    </div>
+
+    <!-- ─── DISPATCH ─── -->
+    <div id="dispatch-section" class="section">
+      <div class="page-header">
+        <h1><i class="ti ti-truck-delivery" style="color:var(--green);"></i> Dispatch</h1>
+        <p>Log product dispatches to agents and track confirmations</p>
+      </div>
+      <div class="card">
+        <div class="card-title"><i class="ti ti-plus"></i> New Dispatch Entry</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Date</label><input type="date" id="d-date"></div>
+          <div class="form-group"><label>Distributor</label>
+            <select id="d-dist" onchange="filterAgentsByDist()"><option value="">Select…</option></select>
+          </div>
+          <div class="form-group"><label>Agent</label>
+            <select id="d-agent"><option value="">Select distributor first</option></select>
+          </div>
+          <div class="form-group"><label>Product</label>
+            <select id="d-product" onchange="autofillPrice()"><option value="">Select…</option></select>
+          </div>
+          <div class="form-group"><label>Qty</label>
+            <input type="number" id="d-qty" min="1" placeholder="0">
+          </div>
+          <div class="form-group"><label>Unit Price (${cur()})</label>
+            <input type="number" id="d-price" min="0" placeholder="0.00">
+          </div>
+        </div>
+        <button class="btn btn-cyan" onclick="addDispatch()"><i class="ti ti-plus"></i> Log Dispatch</button>
+      </div>
+      <div class="card">
+        <div class="flex-between">
+          <div class="card-title" style="margin:0;"><i class="ti ti-list"></i> Dispatch Log</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <div class="form-group" style="margin:0;"><label style="font-size:9px;">Distributor</label>
+              <select id="f-dist" onchange="renderDispatch()" style="padding:5px 9px;font-size:12px;">
+                <option value="">All</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin:0;"><label style="font-size:9px;">Agent</label>
+              <select id="f-agent" onchange="renderDispatch()" style="padding:5px 9px;font-size:12px;">
+                <option value="">All</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin:0;"><label style="font-size:9px;">Date</label>
+              <input type="date" id="f-date" onchange="renderDispatch()" style="padding:5px 9px;font-size:12px;">
+            </div>
+          </div>
+        </div>
+        <div class="table-wrap" style="margin-top:12px;">
+          <table>
+            <thead><tr>
+              <th>Date</th><th>Distributor</th><th>Agent</th><th>Role</th>
+              <th>Product</th><th>Qty</th><th>Value</th><th>Status</th><th>Action</th>
+            </tr></thead>
+            <tbody id="dispatch-tbody"></tbody>
+            <tfoot><tr>
+              <td colspan="5">Total</td>
+              <td id="dl-tot-qty">0</td>
+              <td id="dl-tot-val">—</td>
+              <td colspan="2"></td>
+            </tr></tfoot>
+          </table>
+        </div>
+        <div id="dispatch-empty" class="empty" style="display:none;">No dispatches match this filter.</div>
+      </div>
+    </div>
+
+    <!-- ─── PRODUCTS CATALOGUE ─── -->
+    <div id="products-section" class="section">
+      <div class="page-header">
+        <h1><i class="ti ti-box" style="color:var(--amber);"></i> Products</h1>
+        <p>Full catalogue with images, sizes, packaging hierarchy and pricing</p>
+      </div>
+      <div class="toolbar" style="margin-bottom:14px;">
+        <div class="search-box">
+          <i class="ti ti-search"></i>
+          <input type="text" id="prod-search" placeholder="Search products…" oninput="renderProductCatalogue()">
+        </div>
+        <select id="prod-cat-filter" onchange="renderProductCatalogue()" style="padding:6px 10px;font-size:12px;">
+          <option value="">All Categories</option>
+        </select>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--text2);cursor:pointer;">
+          <input type="checkbox" id="prod-top10-only" onchange="renderProductCatalogue()" style="width:auto;margin:0;"> Top 10 only
+        </label>
+        <button class="btn btn-amber" onclick="sw('setup-section',null,'Setup');document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.querySelector('[onclick*=setup-section]')?.classList.add('active');" style="margin-left:auto;"><i class="ti ti-plus"></i> Add Product</button>
+      </div>
+      <div class="product-grid" id="product-catalogue-grid"></div>
+    </div>
+
+    <!-- ─── REPORTS ─── -->
+    <div id="reports-section" class="section">
+      <div class="page-header">
+        <h1><i class="ti ti-chart-bar" style="color:var(--violet);"></i> Reports</h1>
+        <p>Aggregated performance by period, agent and product</p>
+      </div>
+      <div class="toolbar" style="margin-bottom:14px;">
+        <div class="form-group" style="margin:0;"><label>Period</label>
+          <select id="rep-period" onchange="renderReports()" style="padding:6px 10px;font-size:12px;">
+            <option value="week">This Week</option>
+            <option value="month" selected>This Month</option>
+            <option value="all">All Time</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0;"><label>Agent</label>
+          <select id="rep-agent" onchange="renderReports()" style="padding:6px 10px;font-size:12px;">
+            <option value="">All Agents</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0;"><label>Distributor</label>
+          <select id="rep-dist" onchange="renderReports()" style="padding:6px 10px;font-size:12px;">
+            <option value="">All</option>
+          </select>
+        </div>
+        <button class="btn btn-green" onclick="exportAllExcel()" style="margin-left:auto;">
+          <i class="ti ti-file-spreadsheet"></i> Export Excel
+        </button>
+      </div>
+      <div id="rep-content"></div>
+    </div>
+
+    <!-- ─── PROMOTIONS ─── -->
+    <div id="promotions-section" class="section">
+      <div class="page-header">
+        <h1><i class="ti ti-tag" style="color:var(--amber);"></i> AVC Promotions</h1>
+        <p>Manage Annual Volume Commitment tiers — Gold, Silver, Bronze</p>
+      </div>
+      <div class="flex-between" style="margin-bottom:14px;">
+        <span style="font-size:13px;color:var(--text2);">Configure promotion tiers and assign to shops</span>
+        <button class="btn btn-amber" onclick="openAddPromoModal()"><i class="ti ti-plus"></i> New Promotion</button>
+      </div>
+      <div id="promos-content"></div>
+    </div>
+
+    <!-- ─── SETUP ─── -->
+    <div id="setup-section" class="section">
+      <div class="page-header">
+        <h1><i class="ti ti-settings-2" style="color:var(--accent);"></i> Setup</h1>
+        <p>Add and manage distributors, agents, products and shops</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
+
+        <!-- Add Distributor -->
+        <div class="card">
+          <div class="card-title"><i class="ti ti-building-store" style="color:var(--violet);"></i> Add Distributor</div>
+          <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+            <div class="form-group" style="grid-column:1/-1;"><label>Company Name *</label><input id="s-dist-name" placeholder="e.g. Daady Ash Ltd"></div>
+            <div class="form-group"><label>Type</label>
+              <select id="s-dist-type"><option>Distributor</option><option>Wholesaler</option></select>
+            </div>
+            <div class="form-group"><label>Region</label>
+              <select id="s-dist-region"><option value="">None</option></select>
+            </div>
+            <div class="form-group"><label>Location</label><input id="s-dist-loc" placeholder="e.g. Accra Central"></div>
+            <div class="form-group"><label>Phone</label><input id="s-dist-phone" placeholder="+233 XX XXX XXXX"></div>
+            <div class="form-group" style="grid-column:1/-1;"><label>Address</label><input id="s-dist-addr" placeholder="Street, Area"></div>
+            <div class="form-group"><label>Contact Person</label><input id="s-dist-contact" placeholder="Name"></div>
+            <div class="form-group"><label>Email</label><input id="s-dist-email" placeholder="email@company.com" type="email"></div>
+            <div class="form-group"><label>WhatsApp</label><input id="s-dist-wa" placeholder="+233 XX XXX XXXX"></div>
+          </div>
+          <button class="btn btn-violet" onclick="addDistributor()"><i class="ti ti-plus"></i> Add Distributor</button>
+          <div style="margin-top:12px;" id="setup-dist-list"></div>
+        </div>
+
+        <!-- Add Agent -->
+        <div class="card">
+          <div class="card-title"><i class="ti ti-id-badge-2" style="color:var(--pink);"></i> Add OMR / Salesman</div>
+          <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+            <div class="form-group" style="grid-column:1/-1;"><label>Full Name *</label><input id="s-agent-name" placeholder="Full name"></div>
+            <div class="form-group"><label>Role</label>
+              <select id="s-agent-role"><option value="OMR">OMR</option><option value="Salesman">Salesman</option></select>
+            </div>
+            <div class="form-group"><label>Distributor *</label>
+              <select id="s-agent-dist"><option value="">Select…</option></select>
+            </div>
+            <div class="form-group"><label>Phone</label><input id="s-agent-phone" placeholder="+233 XX XXX XXXX"></div>
+            <div class="form-group"><label>Email</label><input id="s-agent-email" placeholder="name@email.com" type="email"></div>
+            <div class="form-group" style="grid-column:1/-1;"><label>Home Address</label><input id="s-agent-addr" placeholder="House No., Street, Area"></div>
+            <div class="form-group"><label>WhatsApp</label><input id="s-agent-wa" placeholder="+233 XX XXX XXXX"></div>
+            <div class="form-group"><label>Emergency Contact</label><input id="s-agent-emergency" placeholder="Name & Phone"></div>
+          </div>
+          <button class="btn btn-pink" onclick="addAgent()"><i class="ti ti-plus"></i> Add Agent</button>
+          <div style="margin-top:12px;" id="setup-agent-list"></div>
+        </div>
+
+        <!-- Add Shop -->
+        <div class="card">
+          <div class="card-title"><i class="ti ti-building" style="color:var(--blue);"></i> Add Shop</div>
+          <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+            <div class="form-group" style="grid-column:1/-1;"><label>Shop Name *</label><input id="s-shop-name" placeholder="e.g. Kwame Supermart"></div>
+            <div class="form-group"><label>Distributor *</label>
+              <select id="s-shop-dist" onchange="refreshAllSelects()"><option value="">Select…</option></select>
+            </div>
+            <div class="form-group"><label>Assigned Agent</label>
+              <select id="s-shop-agent"><option value="">None</option></select>
+            </div>
+            <div class="form-group"><label>Owner Name</label><input id="s-shop-owner" placeholder="Owner's full name"></div>
+            <div class="form-group"><label>Owner Contact</label><input id="s-shop-contact" placeholder="+233 XX XXX XXXX"></div>
+            <div class="form-group"><label>Owner WhatsApp</label><input id="s-shop-wa" placeholder="+233 XX XXX XXXX"></div>
+            <div class="form-group"><label>Location / Area</label><input id="s-shop-loc" placeholder="e.g. Kaneshie"></div>
+            <div class="form-group" style="grid-column:1/-1;"><label>Full Address</label><input id="s-shop-addr" placeholder="Street, Area, City"></div>
+            <div class="form-group"><label>AVC Tier</label>
+              <select id="s-shop-avc">
+                <option value="none">None</option>
+                <option value="bronze">Bronze</option>
+                <option value="silver">Silver</option>
+                <option value="gold">Gold</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-blue" onclick="addShop()"><i class="ti ti-plus"></i> Add Shop</button>
+        </div>
+
+        <!-- Add Product -->
+        <div class="card">
+          <div class="card-title"><i class="ti ti-box" style="color:var(--amber);"></i> Products & Pricing</div>
+
+          <!-- Image -->
+          <div class="form-group" style="margin-bottom:10px;">
+            <label>Product Image URL</label>
+            <input id="s-prod-img" placeholder="Paste image link (Google, Dropbox, etc.)" oninput="previewProdImg()">
+            <div id="s-prod-img-preview" style="margin-top:8px;display:none;">
+              <img id="s-prod-img-el" src="" alt="preview" style="width:100%;height:120px;object-fit:cover;border-radius:8px;border:1px solid var(--border2);" onerror="this.parentNode.style.display='none'">
+            </div>
+          </div>
+
+          <!-- Name + Category -->
+          <div class="form-group" style="margin-bottom:10px;"><label>Product Name *</label><input id="s-prod-name" placeholder="e.g. Nivea Men Deep Roll-On"></div>
+          <div class="form-group" style="margin-bottom:10px;"><label>Category</label><input id="s-prod-cat" placeholder="e.g. Deodorant Roll-On"></div>
+
+          <!-- Size + Unit -->
+          <div class="form-group" style="margin-bottom:10px;">
+            <label>Size / Volume / Weight</label>
+            <div class="size-wrap">
+              <input type="number" id="s-prod-size" placeholder="e.g. 50" min="0" step="0.1">
+              <select id="s-prod-size-unit">
+                <option value="ml">ml</option>
+                <option value="L">L</option>
+                <option value="g">g</option>
+                <option value="kg">kg</option>
+                <option value="pcs">pcs</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Price -->
+          <div class="form-group" style="margin-bottom:10px;"><label>Unit Price (per Pc) *</label><input id="s-prod-price" type="number" placeholder="0.00" min="0"></div>
+
+          <!-- Packaging presets -->
+          <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;">Packaging</div>
+          <div class="pkg-preset-btns">
+            <div class="pkg-preset" onclick="applyPkgPreset(6,5,30,'Roll-On / Spray')">Roll-On / Spray<br><span style="font-weight:400;font-size:10px;">6/Pk · 5Pks/Ctn · 30pcs</span></div>
+            <div class="pkg-preset" onclick="applyPkgPreset(6,2,12,'Lotion / Cream')">Lotion / Cream<br><span style="font-weight:400;font-size:10px;">6/Pk · 2Pks/Ctn · 12pcs</span></div>
+            <div class="pkg-preset" onclick="applyPkgPreset(6,4,24,'Lip Balm')">Lip Balm<br><span style="font-weight:400;font-size:10px;">6/Pk · 4Pks/Ctn · 24pcs</span></div>
+            <div class="pkg-preset" onclick="applyPkgPreset(12,2,24,'Plasters')">Plasters<br><span style="font-weight:400;font-size:10px;">12/Pk · 2Pks/Ctn · 24pcs</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:4px;">
+            <div class="form-group">
+              <label>Pcs per Pack</label>
+              <input id="s-prod-pcsPerPack" type="number" value="6" min="1" oninput="updatePkgSummary()">
+            </div>
+            <div class="form-group">
+              <label>Packs per Carton</label>
+              <input id="s-prod-packsPerCtn" type="number" value="5" min="1" oninput="updatePkgSummary()">
+            </div>
+          </div>
+          <div id="pkg-summary" style="font-size:12px;color:var(--cyan);padding:6px 10px;background:var(--bg3);border-radius:7px;margin-bottom:10px;">
+            1 Pk = 6 pcs &nbsp;·&nbsp; 1 Ctn = 5 Pks = 30 pcs
+          </div>
+
+          <!-- Min Quantities -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:10px;">
+            <div class="form-group"><label>Min Agent Stock (pcs)</label><input id="s-prod-minAgent" type="number" placeholder="0" min="0"></div>
+            <div class="form-group"><label>Min Shop Stock (pcs)</label><input id="s-prod-minShop" type="number" placeholder="0" min="0"></div>
+          </div>
+
+          <!-- Top 10 -->
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;">
+            <label style="display:flex;align-items:center;gap:7px;font-size:12px;cursor:pointer;font-weight:600;color:var(--text2);">
+              <input type="checkbox" id="s-prod-top10" style="width:auto;margin:0;"> Mark as Top 10 Nivea Line
+            </label>
+            <div class="form-group" style="margin:0;flex:1;">
+              <input id="s-prod-rank" type="number" placeholder="Rank 1–10" min="1" max="10" style="font-size:12px;padding:6px 10px;">
+            </div>
+          </div>
+
+          <button class="btn btn-amber" onclick="addProduct()"><i class="ti ti-plus"></i> Add Product</button>
+          <div style="margin-top:12px;" id="setup-prod-list"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ─── AUDIT ─── -->
+    <div id="audit-section" class="section">
+      <div class="page-header">
+        <h1><i class="ti ti-clipboard-list" style="color:var(--green);"></i> Audit Log</h1>
+        <p>Login/logout history and all data changes across the platform</p>
+      </div>
+      <div class="card">
+        <div class="empty">Audit log viewer coming soon. All actions are recorded in MongoDB.</div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══ DETAIL OVERLAY ═══ -->
+<div id="detail-overlay" style="display:none;"></div>
+
+<!-- ═══════════════ MODALS ═══════════════ -->
+
+<!-- Add Company (super admin) -->
+<div class="modal-overlay" id="add-company-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-icon" style="background:rgba(68,138,255,.15);color:var(--blue);"><i class="ti ti-buildings"></i></div>
+      <div class="modal-title">New Company</div>
+      <div class="modal-close" onclick="closeModal('add-company-modal')"><i class="ti ti-x"></i></div>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="form-group" style="grid-column:1/-1;"><label>Company Name *</label><input id="c-name" placeholder="e.g. Beiersdorf Ghana" oninput="document.getElementById('c-slug').value=this.value.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'')"></div>
+        <div class="form-group"><label>Slug * (URL-friendly)</label><input id="c-slug" placeholder="beiersdorf-ghana"></div>
+        <div class="form-group"><label>Industry</label><input id="c-industry" placeholder="FMCG — Personal Care"></div>
+        <div class="form-group"><label>Country</label><input id="c-country" value="Ghana"></div>
+        <div class="form-group"><label>Currency Symbol</label><input id="c-currency" value="GH₵" placeholder="GH₵"></div>
+        <div class="form-group"><label>Accent Colour</label><input id="c-color" type="color" value="#00e5ff" style="height:38px;padding:4px;cursor:pointer;"></div>
+        <div class="form-group"><label>Plan</label>
+          <select id="c-plan">
+            <option value="trial">Trial</option>
+            <option value="starter">Starter</option>
+            <option value="pro" selected>Pro</option>
+            <option value="enterprise">Enterprise</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('add-company-modal')"><i class="ti ti-x"></i> Cancel</button>
+      <button class="btn btn-blue" onclick="addCompany()"><i class="ti ti-plus"></i> Create Company</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Company -->
+<div class="modal-overlay" id="edit-company-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-icon" style="background:rgba(68,138,255,.15);color:var(--blue);"><i class="ti ti-buildings"></i></div>
+      <div class="modal-title">Edit Company</div>
+      <div class="modal-close" onclick="closeModal('edit-company-modal')"><i class="ti ti-x"></i></div>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-company-id">
+      <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="form-group" style="grid-column:1/-1;"><label>Company Name</label><input id="edit-c-name"></div>
+        <div class="form-group"><label>Industry</label><input id="edit-c-industry"></div>
+        <div class="form-group"><label>Country</label><input id="edit-c-country"></div>
+        <div class="form-group"><label>Currency Symbol</label><input id="edit-c-currency"></div>
+        <div class="form-group"><label>Accent Colour</label><input id="edit-c-color" type="color" style="height:38px;padding:4px;cursor:pointer;"></div>
+        <div class="form-group"><label>Plan</label>
+          <select id="edit-c-plan">
+            <option value="trial">Trial</option>
+            <option value="starter">Starter</option>
+            <option value="pro">Pro</option>
+            <option value="enterprise">Enterprise</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1;"><label>Logo URL</label><input id="edit-c-logo" placeholder="https://…/logo.png"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('edit-company-modal')"><i class="ti ti-x"></i> Cancel</button>
+      <button class="btn btn-blue" onclick="saveEditCompany()"><i class="ti ti-device-floppy"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Distributor (modal) -->
+<div class="modal-overlay" id="add-dist-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-icon" style="background:rgba(168,85,247,.15);color:var(--violet);"><i class="ti ti-building-store"></i></div>
+      <div class="modal-title">New Distributor</div>
+      <div class="modal-close" onclick="closeModal('add-dist-modal')"><i class="ti ti-x"></i></div>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="form-group" style="grid-column:1/-1;"><label>Company Name *</label><input id="md-name" placeholder="e.g. Daady Ash Ltd"></div>
+        <div class="form-group"><label>Type</label><select id="md-type"><option>Distributor</option><option>Wholesaler</option></select></div>
+        <div class="form-group"><label>Location</label><input id="md-loc" placeholder="e.g. Accra Central"></div>
+        <div class="form-group"><label>Phone</label><input id="md-phone" placeholder="+233 XX XXX XXXX"></div>
+        <div class="form-group"><label>Email</label><input id="md-email" placeholder="email@company.com" type="email"></div>
+        <div class="form-group" style="grid-column:1/-1;"><label>Address</label><input id="md-addr" placeholder="Street, Area, City"></div>
+        <div class="form-group"><label>Contact Person</label><input id="md-contact" placeholder="Contact name"></div>
+        <div class="form-group"><label>WhatsApp</label><input id="md-wa" placeholder="+233 XX XXX XXXX"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('add-dist-modal')"><i class="ti ti-x"></i> Cancel</button>
+      <button class="btn btn-violet" onclick="
+        document.getElementById('s-dist-name').value=document.getElementById('md-name').value;
+        document.getElementById('s-dist-type').value=document.getElementById('md-type').value;
+        document.getElementById('s-dist-loc').value=document.getElementById('md-loc').value;
+        document.getElementById('s-dist-phone').value=document.getElementById('md-phone').value;
+        document.getElementById('s-dist-email').value=document.getElementById('md-email').value;
+        document.getElementById('s-dist-addr').value=document.getElementById('md-addr').value;
+        document.getElementById('s-dist-contact').value=document.getElementById('md-contact').value;
+        document.getElementById('s-dist-wa').value=document.getElementById('md-wa').value;
+        closeModal('add-dist-modal');addDistributor();
+      "><i class="ti ti-plus"></i> Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Agent (modal) -->
+<div class="modal-overlay" id="add-agent-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-icon" style="background:rgba(255,45,120,.15);color:var(--pink);"><i class="ti ti-id-badge-2"></i></div>
+      <div class="modal-title">New OMR / Salesman</div>
+      <div class="modal-close" onclick="closeModal('add-agent-modal')"><i class="ti ti-x"></i></div>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="form-group" style="grid-column:1/-1;"><label>Full Name *</label><input id="ma-name" placeholder="Full name"></div>
+        <div class="form-group"><label>Role</label><select id="ma-role"><option value="OMR">OMR</option><option value="Salesman">Salesman</option></select></div>
+        <div class="form-group"><label>Distributor *</label><select id="ma-dist"><option value="">Select…</option></select></div>
+        <div class="form-group"><label>Phone</label><input id="ma-phone" placeholder="+233 XX XXX XXXX"></div>
+        <div class="form-group"><label>Email</label><input id="ma-email" placeholder="name@email.com" type="email"></div>
+        <div class="form-group" style="grid-column:1/-1;"><label>Home Address</label><input id="ma-addr" placeholder="House No., Street, Area"></div>
+        <div class="form-group"><label>WhatsApp</label><input id="ma-wa" placeholder="+233 XX XXX XXXX"></div>
+        <div class="form-group"><label>Emergency Contact</label><input id="ma-emergency" placeholder="Name & Phone"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('add-agent-modal')"><i class="ti ti-x"></i> Cancel</button>
+      <button class="btn btn-pink" onclick="
+        document.getElementById('s-agent-name').value=document.getElementById('ma-name').value;
+        document.getElementById('s-agent-role').value=document.getElementById('ma-role').value;
+        document.getElementById('s-agent-dist').value=document.getElementById('ma-dist').value;
+        document.getElementById('s-agent-phone').value=document.getElementById('ma-phone').value;
+        document.getElementById('s-agent-email').value=document.getElementById('ma-email').value;
+        document.getElementById('s-agent-addr').value=document.getElementById('ma-addr').value;
+        document.getElementById('s-agent-wa').value=document.getElementById('ma-wa').value;
+        document.getElementById('s-agent-emergency').value=document.getElementById('ma-emergency').value;
+        closeModal('add-agent-modal');addAgent();
+      "><i class="ti ti-plus"></i> Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Shop (modal) -->
+<div class="modal-overlay" id="add-shop-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-icon" style="background:rgba(68,138,255,.15);color:var(--blue);"><i class="ti ti-building"></i></div>
+      <div class="modal-title">New Shop</div>
+      <div class="modal-close" onclick="closeModal('add-shop-modal')"><i class="ti ti-x"></i></div>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="form-group" style="grid-column:1/-1;"><label>Shop Name *</label><input id="msh-name" placeholder="e.g. Kwame Supermart"></div>
+        <div class="form-group"><label>Distributor *</label><select id="msh-dist"><option value="">Select…</option></select></div>
+        <div class="form-group"><label>Assigned Agent</label><select id="msh-agent"><option value="">None</option></select></div>
+        <div class="form-group"><label>Owner Name</label><input id="msh-owner" placeholder="Owner's name"></div>
+        <div class="form-group"><label>Owner Contact</label><input id="msh-contact" placeholder="+233 XX XXX XXXX"></div>
+        <div class="form-group"><label>Location / Area</label><input id="msh-loc" placeholder="e.g. Kaneshie"></div>
+        <div class="form-group" style="grid-column:1/-1;"><label>Full Address</label><input id="msh-addr" placeholder="Street, Area, City"></div>
+        <div class="form-group"><label>AVC Tier</label>
+          <select id="msh-avc"><option value="none">None</option><option value="bronze">Bronze</option><option value="silver">Silver</option><option value="gold">Gold</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('add-shop-modal')"><i class="ti ti-x"></i> Cancel</button>
+      <button class="btn btn-blue" onclick="
+        document.getElementById('s-shop-name').value=document.getElementById('msh-name').value;
+        document.getElementById('s-shop-dist').value=document.getElementById('msh-dist').value;
+        document.getElementById('s-shop-agent').value=document.getElementById('msh-agent').value;
+        document.getElementById('s-shop-owner').value=document.getElementById('msh-owner').value;
+        document.getElementById('s-shop-contact').value=document.getElementById('msh-contact').value;
+        document.getElementById('s-shop-loc').value=document.getElementById('msh-loc').value;
+        document.getElementById('s-shop-addr').value=document.getElementById('msh-addr').value;
+        document.getElementById('s-shop-avc').value=document.getElementById('msh-avc').value;
+        closeModal('add-shop-modal');addShop();
+      "><i class="ti ti-plus"></i> Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Distributor -->
+<div class="modal-overlay" id="edit-dist-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-icon" style="background:rgba(168,85,247,.15);color:var(--violet);"><i class="ti ti-building-store"></i></div>
+      <div class="modal-title">Edit Distributor</div>
+      <div class="modal-close" onclick="closeModal('edit-dist-modal')"><i class="ti ti-x"></i></div>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-dist-id">
+      <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="form-group" style="grid-column:1/-1;"><label>Company Name</label><input id="edit-dist-name"></div>
+        <div class="form-group"><label>Type</label><select id="edit-dist-type"><option>Distributor</option><option>Wholesaler</option></select></div>
+        <div class="form-group"><label>Location</label><input id="edit-dist-loc"></div>
+        <div class="form-group"><label>Phone</label><input id="edit-dist-phone"></div>
+        <div class="form-group"><label>Email</label><input id="edit-dist-email" type="email"></div>
+        <div class="form-group" style="grid-column:1/-1;"><label>Address</label><input id="edit-dist-addr"></div>
+        <div class="form-group"><label>Contact Person</label><input id="edit-dist-contact"></div>
+        <div class="form-group"><label>WhatsApp</label><input id="edit-dist-wa"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('edit-dist-modal')"><i class="ti ti-x"></i> Cancel</button>
+      <button class="btn btn-cyan" onclick="saveEditDist()"><i class="ti ti-device-floppy"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Agent -->
+<div class="modal-overlay" id="edit-agent-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-icon" style="background:rgba(255,45,120,.15);color:var(--pink);"><i class="ti ti-id-badge-2"></i></div>
+      <div class="modal-title">Edit Agent</div>
+      <div class="modal-close" onclick="closeModal('edit-agent-modal')"><i class="ti ti-x"></i></div>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-agent-id">
+      <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="form-group" style="grid-column:1/-1;"><label>Full Name</label><input id="edit-agent-name"></div>
+        <div class="form-group"><label>Role</label><select id="edit-agent-role"><option value="OMR">OMR</option><option value="Salesman">Salesman</option></select></div>
+        <div class="form-group"><label>Distributor</label><select id="edit-agent-dist"><option value="">Select…</option></select></div>
+        <div class="form-group"><label>Phone</label><input id="edit-agent-phone"></div>
+        <div class="form-group"><label>Email</label><input id="edit-agent-email" type="email"></div>
+        <div class="form-group" style="grid-column:1/-1;"><label>Home Address</label><input id="edit-agent-addr"></div>
+        <div class="form-group"><label>WhatsApp</label><input id="edit-agent-wa"></div>
+        <div class="form-group"><label>Emergency Contact</label><input id="edit-agent-emergency"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('edit-agent-modal')"><i class="ti ti-x"></i> Cancel</button>
+      <button class="btn btn-pink" onclick="saveEditAgent()"><i class="ti ti-device-floppy"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Shop -->
+<div class="modal-overlay" id="edit-shop-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-icon" style="background:rgba(68,138,255,.15);color:var(--blue);"><i class="ti ti-building"></i></div>
+      <div class="modal-title">Edit Shop</div>
+      <div class="modal-close" onclick="closeModal('edit-shop-modal')"><i class="ti ti-x"></i></div>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-shop-id">
+      <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="form-group" style="grid-column:1/-1;"><label>Shop Name</label><input id="edit-shop-name"></div>
+        <div class="form-group"><label>Distributor</label><select id="edit-shop-dist"><option value="">Select…</option></select></div>
+        <div class="form-group"><label>Assigned Agent</label><select id="edit-shop-agent"><option value="">None</option></select></div>
+        <div class="form-group"><label>Owner Name</label><input id="edit-shop-owner"></div>
+        <div class="form-group"><label>Owner Contact</label><input id="edit-shop-contact"></div>
+        <div class="form-group"><label>Owner WhatsApp</label><input id="edit-shop-wa"></div>
+        <div class="form-group"><label>Location</label><input id="edit-shop-loc"></div>
+        <div class="form-group" style="grid-column:1/-1;"><label>Full Address</label><input id="edit-shop-addr"></div>
+        <div class="form-group"><label>AVC Tier</label>
+          <select id="edit-shop-avc"><option value="none">None</option><option value="bronze">Bronze</option><option value="silver">Silver</option><option value="gold">Gold</option></select>
+        </div>
+        <div class="form-group"><label>Credit Balance (GH₵)</label><input id="edit-shop-credit" type="number" min="0"></div>
+        <div class="form-group" style="grid-column:1/-1;"><label>Shop Photo URL</label><input id="edit-shop-photo" placeholder="https://… (paste image link)"></div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>Google Maps URL</label>
+          <input id="edit-shop-maps" placeholder="Paste link from Google Maps (Share → Copy link)">
+        </div>
+        <div class="form-group"><label>Latitude</label><input id="edit-shop-lat" type="number" step="any" placeholder="e.g. 5.6037"></div>
+        <div class="form-group"><label>Longitude</label><input id="edit-shop-lng" type="number" step="any" placeholder="e.g. -0.1870"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('edit-shop-modal')"><i class="ti ti-x"></i> Cancel</button>
+      <button class="btn btn-blue" onclick="saveEditShop()"><i class="ti ti-device-floppy"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Product -->
+<div class="modal-overlay" id="edit-prod-modal">
+  <div class="modal" style="max-width:580px;">
+    <div class="modal-header">
+      <div class="modal-icon" style="background:rgba(255,179,0,.15);color:var(--amber);"><i class="ti ti-box"></i></div>
+      <div class="modal-title">Edit Product</div>
+      <div class="modal-close" onclick="closeModal('edit-prod-modal')"><i class="ti ti-x"></i></div>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-prod-id">
+      <div class="form-group" style="margin-bottom:10px;">
+        <label>Product Image URL</label>
+        <input id="edit-prod-img" placeholder="Paste image link" oninput="
+          const el=document.getElementById('edit-prod-img-el');
+          const wrap=document.getElementById('edit-prod-img-wrap');
+          if(this.value){el.src=this.value;wrap.style.display='block';}else{wrap.style.display='none';}">
+        <div id="edit-prod-img-wrap" style="margin-top:7px;display:none;">
+          <img id="edit-prod-img-el" src="" alt="" style="width:100%;height:110px;object-fit:cover;border-radius:8px;border:1px solid var(--border2);" onerror="this.parentNode.style.display='none'">
+        </div>
+      </div>
+      <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="form-group" style="grid-column:1/-1;"><label>Product Name</label><input id="edit-prod-name"></div>
+        <div class="form-group" style="grid-column:1/-1;"><label>Category</label><input id="edit-prod-cat"></div>
+        <div class="form-group">
+          <label>Size / Volume</label>
+          <div class="size-wrap">
+            <input type="number" id="edit-prod-size" min="0" step="0.1" placeholder="e.g. 50">
+            <select id="edit-prod-size-unit">
+              <option value="ml">ml</option>
+              <option value="L">L</option>
+              <option value="g">g</option>
+              <option value="kg">kg</option>
+              <option value="pcs">pcs</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group"><label>Unit Price (per Pc)</label><input id="edit-prod-price" type="number" min="0"></div>
+        <div class="form-group"><label>Pcs per Pack</label><input id="edit-prod-pcsPerPack" type="number" min="1" oninput="updateEditPkgSummary()"></div>
+        <div class="form-group"><label>Packs per Carton</label><input id="edit-prod-packsPerCtn" type="number" min="1" oninput="updateEditPkgSummary()"></div>
+      </div>
+      <div id="edit-pkg-summary" style="font-size:12px;color:var(--cyan);padding:6px 10px;background:var(--bg3);border-radius:7px;margin-bottom:10px;"></div>
+      <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="form-group"><label>Min Agent Stock (pcs)</label><input id="edit-prod-minAgent" type="number" min="0"></div>
+        <div class="form-group"><label>Min Shop Stock (pcs)</label><input id="edit-prod-minShop" type="number" min="0"></div>
+        <div class="form-group"><label>Top 10 Rank (1–10)</label><input id="edit-prod-rank" type="number" min="1" max="10"></div>
+        <div class="form-group" style="justify-content:flex-end;padding-top:18px;">
+          <label style="display:flex;align-items:center;gap:7px;font-size:12px;cursor:pointer;font-weight:600;color:var(--text2);">
+            <input type="checkbox" id="edit-prod-top10" style="width:auto;margin:0;"> Top 10 Line
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('edit-prod-modal')"><i class="ti ti-x"></i> Cancel</button>
+      <button class="btn btn-amber" onclick="saveEditProduct()"><i class="ti ti-device-floppy"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Promotion Modal -->
+<div class="modal-overlay" id="promo-modal">
+  <div class="modal" style="max-width:680px;">
+    <div class="modal-header">
+      <div class="modal-icon" style="background:rgba(255,179,0,.15);color:var(--amber);"><i class="ti ti-tag"></i></div>
+      <div class="modal-title">New AVC Promotion</div>
+      <div class="modal-close" onclick="closeModal('promo-modal')"><i class="ti ti-x"></i></div>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid" style="grid-template-columns:1fr 1fr;margin-bottom:16px;">
+        <div class="form-group" style="grid-column:1/-1;"><label>Promotion Name *</label><input id="promo-name" placeholder="e.g. Nivea AVC 2025"></div>
+        <div class="form-group"><label>Code *</label><input id="promo-code" placeholder="e.g. NIVAVC25"></div>
+        <div class="form-group"><label>Description</label><input id="promo-desc" placeholder="Short description"></div>
+        <div class="form-group"><label>Start Date</label><input id="promo-start" type="date"></div>
+        <div class="form-group"><label>End Date</label><input id="promo-end" type="date"></div>
+      </div>
+      <div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">Tiers</div>
+      <div class="avc-grid">
+        <div class="avc-card gold">
+          <div class="avc-tier-name" style="color:var(--amber);">Gold</div>
+          <div class="form-group" style="margin-top:10px;"><label>Min Spend (GH₵)</label><input id="tier-gold-min" type="number" value="5000" min="0"></div>
+          <div class="form-group" style="margin-top:8px;"><label>Reward Voucher (GH₵)</label><input id="tier-gold-reward" type="number" value="500" min="0"></div>
+        </div>
+        <div class="avc-card silver">
+          <div class="avc-tier-name" style="color:#b0bec5;">Silver</div>
+          <div class="form-group" style="margin-top:10px;"><label>Min Spend (GH₵)</label><input id="tier-silver-min" type="number" value="2500" min="0"></div>
+          <div class="form-group" style="margin-top:8px;"><label>Reward Voucher (GH₵)</label><input id="tier-silver-reward" type="number" value="200" min="0"></div>
+        </div>
+        <div class="avc-card bronze">
+          <div class="avc-tier-name" style="color:#bc8f8f;">Bronze</div>
+          <div class="form-group" style="margin-top:10px;"><label>Min Spend (GH₵)</label><input id="tier-bronze-min" type="number" value="1000" min="0"></div>
+          <div class="form-group" style="margin-top:8px;"><label>Reward Voucher (GH₵)</label><input id="tier-bronze-reward" type="number" value="75" min="0"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('promo-modal')"><i class="ti ti-x"></i> Cancel</button>
+      <button class="btn btn-amber" onclick="savePromo()"><i class="ti ti-plus"></i> Create Promotion</button>
+    </div>
+  </div>
+</div>
+
+<!-- Stock Import Modal -->
+<div class="modal-overlay" id="import-modal">
+  <div class="modal" style="max-width:680px;">
+    <div class="modal-header">
+      <div class="modal-icon" style="background:rgba(255,179,0,.15);color:var(--amber);"><i class="ti ti-file-import"></i></div>
+      <div>
+        <div class="modal-title">Import Stock from Excel</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px;" id="import-dist-label"></div>
+      </div>
+      <div class="modal-close" onclick="closeImportModal()"><i class="ti ti-x"></i></div>
+    </div>
+    <div class="modal-body">
+      <div id="import-step-1">
+        <div class="import-zone" id="import-zone"
+          onclick="document.getElementById('import-file-input').click()"
+          ondragover="event.preventDefault();this.classList.add('drag-over')"
+          ondragleave="this.classList.remove('drag-over')"
+          ondrop="handleImportDrop(event)">
+          <i class="ti ti-table-import"></i>
+          <p><strong>Click to browse</strong> or drag & drop your Excel file</p>
+          <small>.xlsx · .xls · .csv supported</small>
+        </div>
+        <input type="file" id="import-file-input" accept=".xlsx,.xls,.csv" style="display:none"
+          onchange="handleImportFile(this.files[0])">
+      </div>
+      <div id="import-step-2" style="display:none;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <span style="font-size:13px;font-weight:700;">Column Mapping</span>
+          <span id="import-sheet-name" class="badge badge-muted"></span>
+          <button class="btn btn-sm" onclick="resetImport()" style="margin-left:auto;"><i class="ti ti-arrow-left"></i> Change file</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+          <div class="form-group"><label>Product Name Column</label><select id="map-prod-col" onchange="previewImport()"></select></div>
+          <div class="form-group"><label>Quantity Column</label><select id="map-qty-col" onchange="previewImport()"></select></div>
+        </div>
+        <div id="import-preview"></div>
+      </div>
+      <div id="import-step-3" style="display:none;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+          <i class="ti ti-circle-check" style="color:var(--green);font-size:26px;"></i>
+          <div>
+            <div style="font-size:15px;font-weight:700;">Import Complete</div>
+            <div style="font-size:12px;color:var(--text2);" id="import-summary-text"></div>
+          </div>
+        </div>
+        <div id="import-result-list" style="max-height:220px;overflow-y:auto;"></div>
+      </div>
+    </div>
+    <div class="modal-footer" id="import-footer">
+      <button class="btn" onclick="closeImportModal()"><i class="ti ti-x"></i> Cancel</button>
+      <button class="btn btn-amber" id="import-apply-btn" onclick="applyImport()" style="display:none;"><i class="ti ti-check"></i> Apply to Stock</button>
+    </div>
+  </div>
+</div>
+
+<!-- Populate modal distributor/agent selects on open -->
+<script>
+document.getElementById('add-agent-modal').addEventListener('click', function(e){
+  if(e.target===this){return;}
+  const sel=document.getElementById('ma-dist');
+  if(sel&&!sel.options.length){
+    distributors.forEach(d=>sel.add(new Option(d.name,d._id)));
+  }
+});
+document.getElementById('add-shop-modal').addEventListener('click', function(e){
+  if(e.target===this){return;}
+  const sd=document.getElementById('msh-dist');
+  const sa=document.getElementById('msh-agent');
+  if(sd&&sd.options.length<=1) distributors.forEach(d=>sd.add(new Option(d.name,d._id)));
+  if(sa&&sa.options.length<=1) agents.forEach(a=>sa.add(new Option(`${a.name} (${a.role})`,a._id)));
+});
+// Two-column grid responsive
+document.querySelectorAll('.two-col').forEach(el=>{
+  const mq=window.matchMedia('(max-width:600px)');
+  const apply=()=>el.style.gridTemplateColumns=mq.matches?'1fr':'1fr 1fr';
+  mq.addEventListener('change',apply); apply();
+});
+</script>
+
+<!-- ═══ LOG SALE MODAL ═══ -->
+<div class="modal-overlay" id="sale-modal">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header">
+      <div class="modal-icon" style="background:rgba(0,230,118,.15);color:var(--green);"><i class="ti ti-shopping-cart"></i></div>
+      <div>
+        <div class="modal-title">Log Sale to Shop</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px;" id="sale-shop-label"></div>
+      </div>
+      <div class="modal-close" onclick="closeModal('sale-modal')"><i class="ti ti-x"></i></div>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="sale-shop-id">
+      <input type="hidden" id="sale-dist-id">
+      <input type="hidden" id="sale-agent-id">
+
+      <!-- Payment Method -->
+      <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Payment Method</div>
+      <div class="pay-tabs">
+        <div class="pay-tab active cash" id="pay-tab-cash" onclick="selectPayMethod('cash')">
+          <i class="ti ti-cash"></i>Cash
+        </div>
+        <div class="pay-tab momo" id="pay-tab-momo" onclick="selectPayMethod('momo')">
+          <i class="ti ti-device-mobile"></i>MoMo
+        </div>
+        <div class="pay-tab credit" id="pay-tab-credit" onclick="selectPayMethod('credit')">
+          <i class="ti ti-credit-card"></i>Credit
+        </div>
+      </div>
+      <div id="momo-field" style="display:none;margin-bottom:12px;">
+        <div class="form-group">
+          <label>MoMo Number</label>
+          <input type="tel" id="sale-momo-number" placeholder="e.g. 0241234567">
+        </div>
+      </div>
+      <div id="credit-notice" style="display:none;padding:8px 12px;background:rgba(255,82,82,.08);border:1px solid rgba(255,82,82,.2);border-radius:8px;font-size:12px;color:var(--red);margin-bottom:12px;">
+        <i class="ti ti-alert-circle"></i> This sale will be added to the shop's credit balance
+      </div>
+
+      <!-- Sale Details -->
+      <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>Product *</label>
+          <select id="sale-product" onchange="autoFillSalePrice()">
+            <option value="">Select product…</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Qty *</label>
+          <input type="number" id="sale-qty" min="1" placeholder="0" oninput="updateSaleTotal()">
+        </div>
+        <div class="form-group">
+          <label>Unit Price</label>
+          <input type="number" id="sale-price" min="0" placeholder="0.00" oninput="updateSaleTotal()">
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>Note (optional)</label>
+          <input type="text" id="sale-note" placeholder="e.g. Promo discount applied">
+        </div>
+      </div>
+
+      <!-- Total -->
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--bg3);border-radius:9px;margin-top:4px;">
+        <span style="font-size:13px;color:var(--text2);">Total Amount</span>
+        <span id="sale-total-display" style="font-family:var(--font-mono);font-size:20px;font-weight:700;color:var(--green);">GH₵ 0.00</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('sale-modal')"><i class="ti ti-x"></i> Cancel</button>
+      <button class="btn btn-green" onclick="submitSale(false)"><i class="ti ti-check"></i> Save Sale</button>
+      <button class="btn btn-cyan" onclick="submitSale(true)"><i class="ti ti-printer"></i> Save & Print Receipt</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ RECEIPT PREVIEW MODAL ═══ -->
+<div class="modal-overlay" id="receipt-modal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header">
+      <div class="modal-icon" style="background:rgba(0,229,255,.15);color:var(--cyan);"><i class="ti ti-receipt"></i></div>
+      <div class="modal-title">Receipt</div>
+      <div class="modal-close" onclick="closeModal('receipt-modal')"><i class="ti ti-x"></i></div>
+    </div>
+    <div class="modal-body" id="receipt-preview-body"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('receipt-modal')"><i class="ti ti-x"></i> Close</button>
+      <button class="btn btn-cyan" onclick="printReceipt()"><i class="ti ti-printer"></i> Print</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden print frame -->
+
+
+<!-- ═══ SALESPERSON MOBILE VIEW ═══ -->
+<div id="sp-view" class="sp-view">
+
+  <!-- Top bar -->
+  <div class="sp-topbar">
+    <div class="sp-topbar-left">
+      <div class="sp-greeting" id="sp-greeting">Good morning</div>
+      <div class="sp-name" id="sp-name">Salesperson</div>
+      <div class="sp-company" id="sp-company-name">Beiersdorf Ghana</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <button id="sp-theme-btn" onclick="toggleSpTheme()" style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:7px 10px;cursor:pointer;color:var(--text2);font-size:16px;">
+        <i class="ti ti-moon"></i>
+      </button>
+      <button id="sp-sync-btn" onclick="spSyncData()" style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:7px 10px;cursor:pointer;color:var(--cyan);font-size:12px;font-weight:700;display:flex;align-items:center;gap:5px;">
+        <i class="ti ti-refresh"></i> Sync
+      </button>
+      <button onclick="doLogout()" style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:7px 10px;color:var(--red);font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px;">
+        <i class="ti ti-logout"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="sp-content">
+
+    <!-- ── HOME ── -->
+    <div id="sp-home" class="sp-page active">
+      <div id="sp-home-content">
+        <div class="empty">Loading…</div>
+      </div>
+    </div>
+
+    <!-- ── MY SHOPS ── -->
+    <div id="sp-shops" class="sp-page">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div style="font-family:var(--font-head);font-size:20px;font-weight:700;">My Shops</div>
+        <span id="sp-shops-count" class="badge badge-muted"></span>
+      </div>
+      <div class="search-box" style="margin-bottom:12px;width:100%;">
+        <i class="ti ti-search"></i>
+        <input type="text" id="sp-shop-search" placeholder="Search shops…" oninput="renderSpShops()" style="width:100%;">
+      </div>
+      <div id="sp-shops-content"></div>
+    </div>
+
+    <!-- ── MY ORDERS ── -->
+    <div id="sp-orders" class="sp-page">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div style="font-family:var(--font-head);font-size:20px;font-weight:700;">My Orders</div>
+        <button class="btn btn-sm btn-green" onclick="spExportExcel()"><i class="ti ti-file-spreadsheet"></i> Export</button>
+      </div>
+      <div id="sp-orders-content"></div>
+    </div>
+
+    <!-- ── NEW ORDER ── -->
+    <div id="sp-neworder" class="sp-page">
+      <div style="font-family:var(--font-head);font-size:20px;font-weight:700;margin-bottom:14px;">New Order</div>
+
+      <div class="form-group" style="margin-bottom:12px;">
+        <label>Shop *</label>
+        <select id="sp-order-shop">
+          <option value="">Select shop…</option>
+        </select>
+      </div>
+
+      <!-- Payment method -->
+      <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Payment Method</div>
+      <div class="pay-tabs" style="margin-bottom:12px;">
+        <div class="pay-tab active cash" id="sp-pay-cash" onclick="spSelectPay('cash')">
+          <i class="ti ti-cash"></i>Cash
+        </div>
+        <div class="pay-tab momo" id="sp-pay-momo" onclick="spSelectPay('momo')">
+          <i class="ti ti-device-mobile"></i>MoMo
+        </div>
+        <div class="pay-tab credit" id="sp-pay-credit" onclick="spSelectPay('credit')">
+          <i class="ti ti-credit-card"></i>Credit
+        </div>
+      </div>
+      <div id="sp-momo-wrap" style="display:none;margin-bottom:12px;">
+        <div class="form-group">
+          <label>MoMo Number</label>
+          <input type="tel" id="sp-momo-num" placeholder="e.g. 0241234567">
+        </div>
+      </div>
+      <div id="sp-credit-wrap" style="display:none;margin-bottom:12px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div class="form-group">
+            <label>Credit Weeks</label>
+            <input type="number" id="sp-credit-weeks" placeholder="e.g. 4" min="1">
+          </div>
+          <div class="form-group">
+            <label>Due Date</label>
+            <input type="date" id="sp-credit-due">
+          </div>
+        </div>
+        <div style="padding:8px 12px;background:rgba(255,82,82,.08);border:1px solid rgba(255,82,82,.2);border-radius:8px;font-size:12px;color:var(--red);margin-top:6px;">
+          <i class="ti ti-alert-circle"></i> Will be added to shop's credit balance
+        </div>
+      </div>
+
+      <!-- Products -->
+      <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Products *</div>
+      <div id="sp-order-products"></div>
+      <button class="btn btn-sm" style="width:100%;justify-content:center;margin-bottom:12px;" onclick="spAddProductRow()">
+        <i class="ti ti-plus"></i> Add Another Product
+      </button>
+
+      <!-- Total -->
+      <div class="sp-order-total">
+        <span style="font-size:13px;color:var(--text2);">Total Amount</span>
+        <span class="sp-order-total-val" id="sp-order-total-val">GH₵ 0.00</span>
+      </div>
+
+      <!-- Notes -->
+      <div class="form-group" style="margin:12px 0;">
+        <label>Notes (optional)</label>
+        <input type="text" id="sp-order-notes" placeholder="e.g. Delivered to store manager">
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+        <button class="btn btn-green" onclick="spSubmitOrder(false)" style="justify-content:center;padding:14px;font-size:14px;">
+          <i class="ti ti-check"></i> Save
+        </button>
+        <button class="btn btn-cyan" onclick="spSubmitOrder(true)" style="justify-content:center;padding:14px;font-size:14px;">
+          <i class="ti ti-printer"></i> Save & Print
+        </button>
+      </div>
+    </div>
+
+    <!-- ── TOP 10 STOCK ── -->
+    <div id="sp-stock" class="sp-page">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <div style="font-family:var(--font-head);font-size:20px;font-weight:700;">Top 10 Stock</div>
+        <button class="btn btn-sm" onclick="spSyncData()"><i class="ti ti-refresh"></i> Refresh</button>
+      </div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:14px;">Minimum stock status for key Nivea lines</div>
+      <div id="sp-stock-content"></div>
+    </div>
+
+  </div><!-- end sp-content -->
+
+  <!-- Bottom nav -->
+  <div class="sp-bottom-nav">
+    <button class="sp-nav-btn active" data-page="sp-home" onclick="spNav('sp-home',this)">
+      <i class="ti ti-home"></i>Home
+    </button>
+    <button class="sp-nav-btn" data-page="sp-shops" onclick="spNav('sp-shops',this)">
+      <i class="ti ti-building"></i>Shops
+    </button>
+    <button class="sp-nav-btn" data-page="sp-neworder" onclick="spNav('sp-neworder',this)">
+      <i class="ti ti-file-plus"></i>Order
+    </button>
+    <button class="sp-nav-btn" data-page="sp-orders" onclick="spNav('sp-orders',this)">
+      <i class="ti ti-list"></i>Orders
+    </button>
+    <button class="sp-nav-btn" data-page="sp-stock" onclick="spNav('sp-stock',this)">
+      <i class="ti ti-package"></i>Top 10
+    </button>
+  </div>
+
+</div><!-- end sp-view -->
+
+
+<!-- ═══ TARGET MANAGEMENT MODAL ═══ -->
+<div class="modal-overlay" id="target-modal">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-header">
+      <div class="modal-icon" style="background:rgba(168,85,247,.15);color:var(--violet);"><i class="ti ti-target"></i></div>
+      <div class="modal-title">Set Monthly Targets</div>
+      <div class="modal-close" onclick="closeModal('target-modal')"><i class="ti ti-x"></i></div>
+    </div>
+    <div class="modal-body">
+      <!-- Month + Year picker -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+        <div class="form-group">
+          <label>Month</label>
+          <select id="target-month" onchange="loadTargetAgentRows()">
+            <option value="1">January</option><option value="2">February</option>
+            <option value="3">March</option><option value="4">April</option>
+            <option value="5">May</option><option value="6">June</option>
+            <option value="7">July</option><option value="8">August</option>
+            <option value="9">September</option><option value="10">October</option>
+            <option value="11">November</option><option value="12">December</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Year</label>
+          <input type="number" id="target-year" value="2026" min="2024" max="2030" onchange="loadTargetAgentRows()">
+        </div>
+      </div>
+      <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;">
+        Agent Targets (GH&#8373;) — fill monthly total + weekly breakdown
+      </div>
+      <div id="target-agents-list">
+        <div style="color:var(--text2);font-size:13px;padding:10px 0;">Loading agents…</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('target-modal')"><i class="ti ti-x"></i> Cancel</button>
+      <button class="btn btn-violet" onclick="saveAllTargets()"><i class="ti ti-device-floppy"></i> Save All Targets</button>
+    </div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,220 @@
+import mongoose from 'mongoose';
+import Company from '../server/models/Company.js';
+import User from '../server/models/User.js';
+import Region from '../server/models/Region.js';
+import Distributor from '../server/models/Distributor.js';
+import Agent from '../server/models/Agent.js';
+import Product from '../server/models/Product.js';
+import Stock from '../server/models/Stock.js';
+import Shop from '../server/models/Shop.js';
+import Dispatch from '../server/models/Dispatch.js';
+import Promotion from '../server/models/Promotion.js';
+import SalesTarget from '../server/models/SalesTarget.js';
+
+const URI = process.env.MONGODB_URI;
+if (!URI) { console.error('\u274c MONGODB_URI not set'); process.exit(1); }
+
+async function seed() {
+  await mongoose.connect(URI);
+  console.log('\u2705  Connected to MongoDB');
+
+  await Promise.all([
+    Company.deleteMany({}), User.deleteMany({}), Region.deleteMany({}),
+    Distributor.deleteMany({}), Agent.deleteMany({}), Product.deleteMany({}),
+    Stock.deleteMany({}), Shop.deleteMany({}), Dispatch.deleteMany({}),
+    Promotion.deleteMany({}), SalesTarget.deleteMany({}),
+  ]);
+  console.log('\ud83e\uddf9  Cleared existing data');
+
+  // SUPER ADMIN
+  const superAdmin = await User.create({
+    username:'superadmin', password:'Admin@1234',
+    fullName:'Platform Super Admin', role:'super_admin',
+  });
+  console.log('\ud83d\udc64  Super admin  \u2192  superadmin / Admin@1234');
+
+  // ── BEIERSDORF GHANA ──────────────────────────────
+  const bdf = await Company.create({
+    name:'Beiersdorf Ghana', slug:'beiersdorf-ghana',
+    industry:'FMCG \u2014 Personal Care', country:'Ghana',
+    currency:'GH\u20b5', accentColor:'#00e5ff', plan:'pro',
+    createdBy:superAdmin._id,
+  });
+  const bdfAdmin = await User.create({
+    username:'bdf_admin', password:'Bdf@1234',
+    fullName:'Kofi Mensah', role:'company_admin', companyId:bdf._id,
+  });
+  console.log('\ud83c\udfe2  Beiersdorf Ghana  \u2192  bdf_admin / Bdf@1234');
+
+  const [accraReg, ashReg] = await Region.insertMany([
+    { companyId:bdf._id, name:'Greater Accra', description:'Accra Metro + Tema', createdBy:bdfAdmin._id },
+    { companyId:bdf._id, name:'Ashanti', description:'Kumasi & surrounding', createdBy:bdfAdmin._id },
+  ]);
+
+  const [daady, kwesi, tema] = await Distributor.insertMany([
+    { companyId:bdf._id, regionId:accraReg._id, name:'Daady Ash Ltd', type:'Distributor', location:'Accra Central', address:'Ring Road Central, Accra', contact:'Asher Boateng', phone:'+233 24 111 2233', whatsapp:'+233 24 111 2233', email:'daady@example.com' },
+    { companyId:bdf._id, regionId:accraReg._id, name:'Kwesi Wholesale Hub', type:'Wholesaler', location:'Osu, Accra', address:'Oxford Street, Osu', contact:'Kwesi Appiah', phone:'+233 20 333 4455', whatsapp:'+233 20 333 4455', email:'kwesi@example.com' },
+    { companyId:bdf._id, regionId:ashReg._id, name:'Tema Distribution Co', type:'Distributor', location:'Tema', address:'Community 1, Tema', contact:'Ama Darko', phone:'+233 27 555 6677', whatsapp:'+233 27 555 6677', email:'tema@example.com' },
+  ]);
+
+  // Packaging constants
+  const ROLL_ON  = { pcsPerPack:6, packsPerCarton:5, pcsPerCarton:30 };
+  const SPRAY    = { pcsPerPack:6, packsPerCarton:5, pcsPerCarton:30 };
+  const LOTION   = { pcsPerPack:6, packsPerCarton:2, pcsPerCarton:12 };
+  const CREAM    = { pcsPerPack:6, packsPerCarton:2, pcsPerCarton:12 };
+  const LIP      = { pcsPerPack:6, packsPerCarton:4, pcsPerCarton:24 };
+  const SHOWER   = { pcsPerPack:6, packsPerCarton:2, pcsPerCarton:12 };
+  const EUCERIN  = { pcsPerPack:6, packsPerCarton:2, pcsPerCarton:12 };
+  const PLASTERS = { pcsPerPack:12, packsPerCarton:2, pcsPerCarton:24 };
+
+  const bdfProds = await Product.insertMany([
+    // Roll-Ons
+    { companyId:bdf._id, name:'Nivea Men Deep Roll-On',         cat:'Deodorant Roll-On', sizeValue:50,  sizeUnit:'ml', price:18.50, ...ROLL_ON, isTop10:true,  top10Rank:1,  minAgentQty:30, minShopQty:6 },
+    { companyId:bdf._id, name:'Nivea Men Fresh Active Roll-On', cat:'Deodorant Roll-On', sizeValue:50,  sizeUnit:'ml', price:18.50, ...ROLL_ON, isTop10:true,  top10Rank:2,  minAgentQty:30, minShopQty:6 },
+    { companyId:bdf._id, name:'Nivea Whitening Roll-On',        cat:'Deodorant Roll-On', sizeValue:50,  sizeUnit:'ml', price:20.00, ...ROLL_ON, isTop10:true,  top10Rank:3,  minAgentQty:30, minShopQty:6 },
+    { companyId:bdf._id, name:'Nivea Pearl & Beauty Roll-On',   cat:'Deodorant Roll-On', sizeValue:25,  sizeUnit:'ml', price:11.00, ...ROLL_ON, isTop10:false },
+    // Sprays — 30 pcs/Ctn
+    { companyId:bdf._id, name:'Nivea Men Deep Spray',           cat:'Deodorant Spray',   sizeValue:150, sizeUnit:'ml', price:32.00, ...SPRAY, isTop10:false },
+    { companyId:bdf._id, name:'Nivea Men Fresh Power Spray',    cat:'Deodorant Spray',   sizeValue:200, sizeUnit:'ml', price:38.00, ...SPRAY, isTop10:false },
+    { companyId:bdf._id, name:'Nivea Black & White Spray',      cat:'Deodorant Spray',   sizeValue:250, sizeUnit:'ml', price:42.00, ...SPRAY, isTop10:false },
+    // Body Lotions
+    { companyId:bdf._id, name:'Nivea Body Milk Original',       cat:'Body Lotion',       sizeValue:250, sizeUnit:'ml', price:38.00, ...LOTION, isTop10:true, top10Rank:6, minAgentQty:12, minShopQty:6 },
+    { companyId:bdf._id, name:'Nivea Body Milk Shea',           cat:'Body Lotion',       sizeValue:400, sizeUnit:'ml', price:55.00, ...LOTION, isTop10:true, top10Rank:5, minAgentQty:12, minShopQty:6 },
+    { companyId:bdf._id, name:'Nivea Body Lotion Aloe Vera',    cat:'Body Lotion',       sizeValue:500, sizeUnit:'ml', price:68.00, ...LOTION, isTop10:false },
+    { companyId:bdf._id, name:'Nivea Body Lotion Soft',         cat:'Body Lotion',       sizeValue:600, sizeUnit:'ml', price:78.00, ...LOTION, isTop10:false },
+    // Body Creams
+    { companyId:bdf._id, name:'Nivea Creme',                    cat:'Body Cream',        sizeValue:150, sizeUnit:'ml', price:32.00, ...CREAM, isTop10:true, top10Rank:4, minAgentQty:12, minShopQty:6 },
+    { companyId:bdf._id, name:'Nivea Creme Large',              cat:'Body Cream',        sizeValue:400, sizeUnit:'ml', price:65.00, ...CREAM, isTop10:false },
+    // Face Care
+    { companyId:bdf._id, name:'Nivea Men Face Wash',            cat:'Face Care',         sizeValue:100, sizeUnit:'ml', price:28.00, ...CREAM, isTop10:true, top10Rank:7, minAgentQty:12, minShopQty:4 },
+    { companyId:bdf._id, name:'Nivea SPF 30 Day Cream',         cat:'Face Care',         sizeValue:50,  sizeUnit:'ml', price:42.00, ...CREAM, isTop10:true, top10Rank:8, minAgentQty:12, minShopQty:3 },
+    // Lip Balm
+    { companyId:bdf._id, name:'Nivea Lip Balm Original',        cat:'Lip Care',          sizeValue:4.8, sizeUnit:'g',  price:12.00, ...LIP, isTop10:true, top10Rank:9, minAgentQty:24, minShopQty:6 },
+    { companyId:bdf._id, name:'Nivea Lip Balm Strawberry',      cat:'Lip Care',          sizeValue:4.8, sizeUnit:'g',  price:12.00, ...LIP, isTop10:false },
+    { companyId:bdf._id, name:'Nivea Lip Balm Cherry',          cat:'Lip Care',          sizeValue:4.8, sizeUnit:'g',  price:12.00, ...LIP, isTop10:false },
+    // Shower Gel
+    { companyId:bdf._id, name:'Nivea Shower Gel Fresh',         cat:'Shower Gel',        sizeValue:250, sizeUnit:'ml', price:25.00, ...SHOWER, isTop10:true, top10Rank:10, minAgentQty:12, minShopQty:4 },
+    { companyId:bdf._id, name:'Nivea Men Shower Gel Deep',      cat:'Shower Gel',        sizeValue:250, sizeUnit:'ml', price:27.00, ...SHOWER, isTop10:false },
+    // Eucerin
+    { companyId:bdf._id, name:'Eucerin Even Brighter Serum',    cat:'Eucerin',           sizeValue:30,  sizeUnit:'ml', price:195.00, ...EUCERIN, isTop10:false },
+    { companyId:bdf._id, name:'Eucerin Hyaluron-Filler Day',    cat:'Eucerin',           sizeValue:50,  sizeUnit:'ml', price:220.00, ...EUCERIN, isTop10:false },
+    // Plasters
+    { companyId:bdf._id, name:'Hansaplast Classic Roll',        cat:'Plasters',          sizeValue:5,   sizeUnit:'pcs', price:8.00,  ...PLASTERS, isTop10:false },
+    { companyId:bdf._id, name:'Hansaplast Sensitive Strips',    cat:'Plasters',          sizeValue:20,  sizeUnit:'pcs', price:10.00, ...PLASTERS, isTop10:false },
+  ]);
+  console.log('\ud83d\udce6  ' + bdfProds.length + ' products created');
+
+  const [emmanuel, abena, joseph, fatima, kofiA] = await Agent.insertMany([
+    { companyId:bdf._id, distributorId:daady._id, name:'Emmanuel Asante',  role:'OMR',     phone:'+233 24 700 1122', whatsapp:'+233 24 700 1122', email:'e.asante@bdf.com',   address:'Adenta, Accra',   emergency:'Grace Asante +233 24 700 1133' },
+    { companyId:bdf._id, distributorId:daady._id, name:'Abena Owusu',      role:'Salesman', phone:'+233 20 800 3344', whatsapp:'+233 20 800 3344', email:'a.owusu@bdf.com',    address:'Madina, Accra',   emergency:'Kwame Owusu +233 20 800 3355' },
+    { companyId:bdf._id, distributorId:kwesi._id, name:'Joseph Darko',     role:'Salesman', phone:'+233 27 900 5566', whatsapp:'+233 27 900 5566', email:'j.darko@bdf.com',    address:'Osu, Accra',      emergency:'Mary Darko +233 27 900 5577' },
+    { companyId:bdf._id, distributorId:tema._id,  name:'Fatima Al-Hassan', role:'OMR',      phone:'+233 24 600 7788', whatsapp:'+233 24 600 7788', email:'f.hassan@bdf.com',   address:'Tema Comm.4',     emergency:'Ibrahim Hassan +233 24 600 7799' },
+    { companyId:bdf._id, distributorId:tema._id,  name:'Kofi Acheampong',  role:'Salesman', phone:'+233 20 500 9900', whatsapp:'+233 20 500 9900', email:'k.acheampong@bdf.com',address:'Tema Comm.2',    emergency:'Akua Acheampong +233 20 500 9911' },
+  ]);
+
+  await Shop.insertMany([
+    { companyId:bdf._id, distributorId:daady._id, assignedAgent:emmanuel._id, name:'Kwame Supermart',      ownerName:'Kwame Boateng',   ownerContact:'+233 24 111 9900', locationName:'Kaneshie',   avcTier:'gold',   creditBalance:0 },
+    { companyId:bdf._id, distributorId:daady._id, assignedAgent:emmanuel._id, name:'Akosua General Store', ownerName:'Akosua Fofie',    ownerContact:'+233 20 222 3344', locationName:'Lapaz',      avcTier:'silver', creditBalance:0 },
+    { companyId:bdf._id, distributorId:daady._id, assignedAgent:abena._id,    name:'Mensah Cosmetics',     ownerName:'Yaw Mensah',      ownerContact:'+233 27 333 5566', locationName:'Circle',     avcTier:'bronze', creditBalance:120 },
+    { companyId:bdf._id, distributorId:daady._id, assignedAgent:abena._id,    name:'Ghana Pride Beauty',   ownerName:'Esi Agyemang',    ownerContact:'+233 24 444 7788', locationName:'Nungua',     avcTier:'none',   creditBalance:0 },
+    { companyId:bdf._id, distributorId:daady._id, assignedAgent:abena._id,    name:'Bright Pharmacy',      ownerName:'Dr Bright Kusi',  ownerContact:'+233 20 555 8899', locationName:'East Legon', avcTier:'gold',   creditBalance:0 },
+    { companyId:bdf._id, distributorId:kwesi._id, assignedAgent:joseph._id,   name:'Osu Minimart',         ownerName:'Adwoa Asare',     ownerContact:'+233 24 666 0011', locationName:'Osu',        avcTier:'silver', creditBalance:0 },
+    { companyId:bdf._id, distributorId:kwesi._id, assignedAgent:joseph._id,   name:'La Beauty Spot',       ownerName:'Kojo Lartey',     ownerContact:'+233 20 777 2233', locationName:'La',         avcTier:'none',   creditBalance:350 },
+    { companyId:bdf._id, distributorId:kwesi._id, assignedAgent:joseph._id,   name:'Airport Wholesale',    ownerName:'Patricia Addae',  ownerContact:'+233 27 888 4455', locationName:'Airport',    avcTier:'gold',   creditBalance:0 },
+    { companyId:bdf._id, distributorId:tema._id,  assignedAgent:fatima._id,   name:'Tema Central Stores',  ownerName:'Bashir Mahama',   ownerContact:'+233 24 101 2233', locationName:'Tema C1',    avcTier:'silver', creditBalance:0 },
+    { companyId:bdf._id, distributorId:tema._id,  assignedAgent:fatima._id,   name:'Habiba Cosmetics',     ownerName:'Habiba Alidu',    ownerContact:'+233 20 202 3344', locationName:'Tema C5',    avcTier:'none',   creditBalance:85 },
+    { companyId:bdf._id, distributorId:tema._id,  assignedAgent:kofiA._id,    name:'Meridian Pharmacy',    ownerName:'Dr Kwame Kusi',   ownerContact:'+233 27 303 5566', locationName:'Tema C9',    avcTier:'gold',   creditBalance:0 },
+  ]);
+  console.log('\ud83c\udfea  11 shops created');
+
+  // Stock
+  const stockEntries = [];
+  for (const dist of [daady, kwesi, tema]) {
+    for (const prod of bdfProds) {
+      stockEntries.push({ companyId:bdf._id, distributorId:dist._id, productId:prod._id, qty:Math.floor(Math.random()*80)+10 });
+    }
+  }
+  await Stock.insertMany(stockEntries);
+  console.log('\ud83d\udce6  Stock seeded for 3 distributors');
+
+  // Dispatches — last 30 days
+  const allAgents = [emmanuel, abena, joseph, fatima, kofiA];
+  const allDists  = [daady, kwesi, tema];
+  const dispDocs  = [];
+  for (let i=29; i>=0; i--) {
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const dateStr=d.toISOString().split('T')[0];
+    for (let j=0; j<Math.floor(Math.random()*4)+2; j++) {
+      const agent=allAgents[Math.floor(Math.random()*allAgents.length)];
+      const dist=allDists.find(d=>d._id.equals(agent.distributorId));
+      const prod=bdfProds[Math.floor(Math.random()*bdfProds.length)];
+      const qty=Math.floor(Math.random()*12)+1;
+      dispDocs.push({ companyId:bdf._id, distributorId:dist._id, agentId:agent._id, productId:prod._id, date:dateStr, qty, price:prod.price, confirmed:Math.random()>0.3 });
+    }
+  }
+  await Dispatch.insertMany(dispDocs);
+  console.log('\ud83d\ude9a  ' + dispDocs.length + ' dispatch entries created');
+
+  // Sales targets
+  const now=new Date();
+  for (const agent of allAgents) {
+    await SalesTarget.create({ companyId:bdf._id, distributorId:agent.distributorId, agentId:agent._id, month:now.getMonth()+1, year:now.getFullYear(), monthlyTarget:15000, weeklyTargets:{wk1:3000,wk2:3000,wk3:3500,wk4:3000,wk5:2500} });
+  }
+
+  // AVC Promotion
+  await Promotion.create({
+    companyId:bdf._id, name:'Nivea AVC 2025', code:'NIVAVC25',
+    description:'Annual Volume Commitment - outlet loyalty reward',
+    tiers:[
+      {name:'Gold',   minSpend:5000, rewardValue:500, durationMonths:3, color:'#ffb300'},
+      {name:'Silver', minSpend:2500, rewardValue:200, durationMonths:3, color:'#90a4ae'},
+      {name:'Bronze', minSpend:1000, rewardValue:75,  durationMonths:3, color:'#a1887f'},
+    ],
+    isActive:true, startDate:'2025-01-01', endDate:'2025-12-31',
+  });
+
+  // ── UNILEVER GHANA ────────────────────────────────
+  const uni = await Company.create({
+    name:'Unilever Ghana', slug:'unilever-ghana',
+    industry:'FMCG \u2014 Home & Personal Care', country:'Ghana',
+    currency:'GH\u20b5', accentColor:'#1565c0', plan:'starter',
+    createdBy:superAdmin._id,
+  });
+  const uniAdmin = await User.create({
+    username:'uni_admin', password:'Uni@1234',
+    fullName:'Ama Serwaa', role:'company_admin', companyId:uni._id,
+  });
+  console.log('\ud83c\udfe2  Unilever Ghana     \u2192  uni_admin / Uni@1234');
+
+  const uniReg  = await Region.create({ companyId:uni._id, name:'Greater Accra' });
+  const uniDist = await Distributor.create({ companyId:uni._id, regionId:uniReg._id, name:'Accra Premier Distributors', type:'Distributor', location:'Accra', contact:'Samuel Frimpong', phone:'+233 24 900 1234', email:'apd@example.com' });
+  const uniProds = await Product.insertMany([
+    { companyId:uni._id, name:'Dove Soap',        cat:'Soap',      sizeValue:100, sizeUnit:'g',  price:12.00, pcsPerPack:6, packsPerCarton:4, pcsPerCarton:24 },
+    { companyId:uni._id, name:'OMO Powder',        cat:'Detergent', sizeValue:500, sizeUnit:'g',  price:22.00, pcsPerPack:6, packsPerCarton:2, pcsPerCarton:12 },
+    { companyId:uni._id, name:'Rexona Roll-On',    cat:'Deodorant', sizeValue:50,  sizeUnit:'ml', price:17.50, pcsPerPack:6, packsPerCarton:5, pcsPerCarton:30 },
+    { companyId:uni._id, name:'Sunsilk Shampoo',   cat:'Hair Care', sizeValue:200, sizeUnit:'ml', price:20.00, pcsPerPack:6, packsPerCarton:2, pcsPerCarton:12 },
+    { companyId:uni._id, name:'Vaseline Lotion',   cat:'Body Care', sizeValue:400, sizeUnit:'ml', price:40.00, pcsPerPack:6, packsPerCarton:2, pcsPerCarton:12 },
+  ]);
+  const uniAgent = await Agent.create({ companyId:uni._id, distributorId:uniDist._id, name:'Kwabena Osei', role:'Salesman', phone:'+233 24 800 5678', email:'k.osei@unilever.com' });
+  await Shop.insertMany([
+    { companyId:uni._id, distributorId:uniDist._id, assignedAgent:uniAgent._id, name:'Accra Mall Stores',    ownerName:'Nana Agyeman', ownerContact:'+233 24 100 2200', locationName:'Accra Mall' },
+    { companyId:uni._id, distributorId:uniDist._id, assignedAgent:uniAgent._id, name:'West Hills Supermart', ownerName:'Kwesi Poku',   ownerContact:'+233 20 200 3300', locationName:'Weija' },
+  ]);
+  for (const prod of uniProds) {
+    await Stock.create({ companyId:uni._id, distributorId:uniDist._id, productId:prod._id, qty:Math.floor(Math.random()*50)+10 });
+  }
+
+  console.log('\n\u2705  Seed complete!\n');
+  console.log('\u2500'.repeat(55));
+  console.log('  LOGIN CREDENTIALS');
+  console.log('\u2500'.repeat(55));
+  console.log('  Super Admin    \u2192  superadmin  /  Admin@1234');
+  console.log('  Beiersdorf     \u2192  bdf_admin   /  Bdf@1234');
+  console.log('  Unilever       \u2192  uni_admin   /  Uni@1234');
+  console.log('\u2500'.repeat(55));
+  console.log('');
+  await mongoose.disconnect();
+  process.exit(0);
+}
+
+seed().catch(err => { console.error('\u274c Seed failed:', err.message); process.exit(1); });
