@@ -1,12 +1,6 @@
 import express from 'express';
-
-import Product from '../models/Product.js';
 import protect from '../middleware/auth.js';
 import scope from '../middleware/scopeCompany.js';
-import { audit } from './_crud.js';
-
-import protect  from '../middleware/auth.js';
-import scope    from '../middleware/scopeCompany.js';
 import { Product, audit } from './_shared.js';
 
 
@@ -48,12 +42,6 @@ router.delete('/:id', async (req, res) => {
   } catch(e){ res.status(400).json({status:'error', message:e.message}); }
 });
 
-    const filter = { isActive:true };
-    if (req.scopedCompanyId) filter.companyId = req.scopedCompanyId;
-    const list = await Product.find(filter).sort({ cat:1, name:1 });
-    res.json({ status:'success', data: list });
-  } catch(e) { res.status(500).json({ status:'error', message:e.message }); }
-});
 
 router.post('/', async (req, res) => {
   try {

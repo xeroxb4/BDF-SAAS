@@ -1,10 +1,4 @@
 
-export default (req, res, next) => {
-  if (req.user.role === 'super_admin') {
-    req.scopedCompanyId = req.query.companyId || req.headers['x-company-id'] || null;
-  } else {
-    if (!req.companyId) return res.status(403).json({ status:'error', message:'No company assigned.' });
-
 // Ensures non-super_admin users can only access their own company's data.
 // Also allows super_admin to scope to a specific company via ?company= or X-Company-Id header.
 export default (req, res, next) => {

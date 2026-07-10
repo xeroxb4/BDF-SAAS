@@ -1,62 +1,156 @@
 import mongoose from 'mongoose';
 
-const s=new mongoose.Schema({
-
-
 const shopSchema = new mongoose.Schema({
 
-  companyId:      { type: mongoose.Schema.Types.ObjectId, ref: 'Company',     required: true },
-  distributorId:  { type: mongoose.Schema.Types.ObjectId, ref: 'Distributor', required: true },
-  name:           { type: String, required: true, trim: true },
-  ownerName:      { type: String, trim: true },
-  ownerContact:   { type: String, trim: true },
-  ownerWhatsapp:  { type: String, trim: true },
-  address:        { type: String, trim: true },
-  locationName:   { type: String, trim: true },
+  companyId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Company',
+    required: true
+  },
 
-  lat:            { type: Number },
-  lng:            { type: Number },
-  googleMapsUrl:  { type: String, trim: true },
-  photoUrl:       { type: String, trim: true },
-  assignedAgent:  { type: mongoose.Schema.Types.ObjectId, ref: 'Agent' },
-  // Financial
-  creditBalance:  { type: Number, default: 0 },
-  creditLimit:    { type: Number, default: 0 },
-  // GRA compliance
-  tin:            { type: String, trim: true },
-  // AVC
-  avcTier:        { type: String, enum: ['none','bronze','silver','gold'], default: 'none' },
-  avcAccumulated: { type: Number, default: 0 },
-  // Route days (Mon-Fri)
-  routeDays:      [{ type: String, enum: ['Monday','Tuesday','Wednesday','Thursday','Friday'] }],
-  isActive:       { type: Boolean, default: true },
-  legacyId:       { type: String },
-  createdBy:      { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-},{timestamps:true});
-s.index({companyId:1,distributorId:1});
-s.index({legacyId:1});
-export default mongoose.model('Shop',s);
+  distributorId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Distributor',
+    required: true
+  },
+
+  name: {
+    type: String,
+    required: true,
+    trim: true
+  },
+
+  ownerName: {
+    type: String,
+    trim: true
+  },
+
+  ownerContact: {
+    type: String,
+    trim: true
+  },
+
+  ownerWhatsapp: {
+    type: String,
+    trim: true
+  },
+
+  address: {
+    type: String,
+    trim: true
+  },
+
+  locationName: {
+    type: String,
+    trim: true
+  },
 
   // Location
-  lat:            { type: Number },
-  lng:            { type: Number },
-  googleMapsUrl:  { type: String, trim: true },  // paste URL from Google Maps
-  googlePlaceId:  { type: String, trim: true },  // optional place ID
+  lat: {
+    type: Number
+  },
+
+  lng: {
+    type: Number
+  },
+
+  googleMapsUrl: {
+    type: String,
+    trim: true
+  },
+
+  googlePlaceId: {
+    type: String,
+    trim: true
+  },
+
   // Photo
-  photoUrl:       { type: String, trim: true },  // URL of shop photo
+  photoUrl: {
+    type: String,
+    trim: true
+  },
+
   // Assigned agent
-  assignedAgent:  { type: mongoose.Schema.Types.ObjectId, ref: 'Agent' },
+  assignedAgent: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Agent'
+  },
+
   // Financial
-  creditBalance:  { type: Number, default: 0 },
+  creditBalance: {
+    type: Number,
+    default: 0
+  },
+
+  creditLimit: {
+    type: Number,
+    default: 0
+  },
+
+  // GRA compliance
+  tin: {
+    type: String,
+    trim: true
+  },
+
   // AVC
-  avcTier:        { type: String, enum: ['none','bronze','silver','gold'], default: 'none' },
-  avcAccumulated: { type: Number, default: 0 },
-  avcPeriodStart: { type: Date },
-  isActive:       { type: Boolean, default: true },
-  createdBy:      { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-}, { timestamps: true });
+  avcTier: {
+    type: String,
+    enum: ['none','bronze','silver','gold'],
+    default: 'none'
+  },
 
-shopSchema.index({ companyId: 1, distributorId: 1 });
-shopSchema.index({ assignedAgent: 1 });
+  avcAccumulated: {
+    type: Number,
+    default: 0
+  },
+
+  avcPeriodStart: {
+    type: Date
+  },
+
+  routeDays: [{
+    type: String,
+    enum: [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday'
+    ]
+  }],
+
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+
+  legacyId: {
+    type: String
+  },
+
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }
+
+}, {
+  timestamps: true
+});
+
+
+shopSchema.index({
+  companyId: 1,
+  distributorId: 1
+});
+
+shopSchema.index({
+  assignedAgent: 1
+});
+
+shopSchema.index({
+  legacyId: 1
+});
+
+
 export default mongoose.model('Shop', shopSchema);
-

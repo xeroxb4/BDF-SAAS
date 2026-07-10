@@ -1,4 +1,3 @@
-
 import express from 'express';
 import mongoose from 'mongoose';
 import path from 'path';
@@ -10,7 +9,6 @@ import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import mongoSanitize from 'express-mongo-sanitize';
 import { rateLimit } from 'express-rate-limit';
-
 import authRoutes from './server/routes/auth.js';
 import companyRoutes from './server/routes/companies.js';
 import distRoutes from './server/routes/distributors.js';
@@ -21,29 +19,6 @@ import shopRoutes from './server/routes/shops.js';
 import dispatchRoutes from './server/routes/dispatches.js';
 import shopSaleRoutes from './server/routes/shopsales.js';
 import orderRoutes from './server/routes/orders.js';
-import { regR, tarR, proR, audR } from './server/routes/misc.js';
-
-import express from 'express';
-import mongoose from 'mongoose';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import cors from 'cors';
-import helmet from 'helmet';
-import compression from 'compression';
-import cookieParser from 'cookie-parser';
-import morgan from 'morgan';
-import mongoSanitize from 'express-mongo-sanitize';
-import { rateLimit } from 'express-rate-limit';
-
-import authRoutes from './server/routes/auth.js';
-import companyRoutes from './server/routes/companies.js';
-import distRoutes from './server/routes/distributors.js';
-import agentRoutes from './server/routes/agents.js';
-import productRoutes from './server/routes/products.js';
-import stockRoutes from './server/routes/stock.js';
-import shopRoutes from './server/routes/shops.js';
-import dispatchRoutes from './server/routes/dispatches.js';
-import shopSaleRoutes from './server/routes/shopsales.js';
 import { regR, tarR, rpR, proR, audR } from './server/routes/misc.js';
 
 
@@ -51,25 +26,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
 
-
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://fonts.googleapis.com"],
-      scriptSrcAttr: ["'unsafe-inline'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdn.jsdelivr.net"],
-      imgSrc: ["'self'", "data:", "https:", "blob:"],
-      connectSrc: [
-        "'self'",
-        "https://cdn.jsdelivr.net",
-        "https://nominatim.openstreetmap.org"
-      ],
-      frameSrc: ["https://www.google.com", "https://maps.google.com"],
-    },
-  },
-}));
 
 
 // ─── SECURITY ─────────────────────────────────────────────
@@ -105,7 +61,6 @@ const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 300, standardHeaders:
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: { status: 'error', message: 'Too many login attempts. Try again in 15 minutes.' } });
 app.use('/api', limiter);
 app.use('/api/auth/login', authLimiter);
-
 app.use('/api/auth', authRoutes);
 app.use('/api/companies', companyRoutes);
 app.use('/api/distributors', distRoutes);
@@ -126,10 +81,6 @@ app.use(express.static(path.join(__dirname, 'public'), {
 }));
 
 
-const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: { status: 'error', message: 'Too many login attempts.' } });
-app.use('/api', limiter);
-app.use('/api/auth/login', authLimiter);
-
 // ─── ROUTES ───────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
 app.use('/api/companies', companyRoutes);
@@ -147,9 +98,6 @@ app.use('/api/promotions', proR);
 app.use('/api/audit', audR);
 
 // ─── FRONTEND ─────────────────────────────────────────────
-app.use(express.static(path.join(__dirname, 'public'), {
-  maxAge: process.env.NODE_ENV === 'production' ? '1d' : 0,
-}));
 
 app.get('*', (req, res) => {
   if (!req.path.startsWith('/api'))
@@ -185,16 +133,6 @@ mongoose.connect(process.env.MONGODB_URI)
     process.exit(1);
   });
 
-// ─── START ────────────────────────────────────────────────
-const PORT = process.env.PORT || 3000;
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log('✅  MongoDB connected');
-    app.listen(PORT, () => {
-      console.log(`🚀  Server → http://localhost:${PORT}  [${process.env.NODE_ENV || 'development'}]`);
-    });
-  })
-  .catch(err => { console.error('❌  MongoDB failed:', err.message); process.exit(1); });
 
 
 export default app;

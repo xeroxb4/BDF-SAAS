@@ -4,13 +4,6 @@ import Company from '../models/Company.js';
 import User from '../models/User.js';
 import AuditLog from '../models/AuditLog.js';
 import protect from '../middleware/auth.js';
-
-import express     from 'express';
-import Company     from '../models/Company.js';
-import User        from '../models/User.js';
-import AuditLog    from '../models/AuditLog.js';
-import protect     from '../middleware/auth.js';
-
 import requireRole from '../middleware/requireRole.js';
 
 const router = express.Router();
@@ -62,9 +55,24 @@ router.patch('/:id/suspend', requireRole('super_admin'), async (req, res) => {
 
 router.patch('/:id/activate', requireRole('super_admin'), async (req, res) => {
   try {
-    const company = await Company.findByIdAndUpdate(req.params.id, {isActive:true}, {new:true});
-    res.json({status:'success', data:company});
-  } catch(err){ res.status(400).json({status:'error', message:err.message}); }
+    const company = await Company.findByIdAndUpdate(
+      req.params.id,
+      { isActive:true },
+      { new:true }
+    );
+
+    res.json({
+      status:'success',
+      data:company
+    });
+
+  } catch(err) { 
+    res.status(400).json({
+      status:'error',
+      message:err.message
+    }); 
+  }
+});
 
 // GET /api/companies  — super_admin sees all; company_admin sees only their own
 router.get('/', async (req, res) => {
