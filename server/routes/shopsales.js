@@ -1,21 +1,21 @@
-<<<<<<< HEAD
+
 import express from 'express';
 import ShopSale from '../models/ShopSale.js';
 import Shop from '../models/Shop.js';
 import protect from '../middleware/auth.js';
 import scope from '../middleware/scopeCompany.js';
-=======
+
 import express  from 'express';
 import protect  from '../middleware/auth.js';
 import scope    from '../middleware/scopeCompany.js';
 import ShopSale from '../models/ShopSale.js';
 import Shop     from '../models/Shop.js';
->>>>>>> a50ac663ea68032a9b040b7c973b5a0b9334bfdf
+
 
 const router = express.Router();
 router.use(protect, scope);
 
-<<<<<<< HEAD
+
 router.get('/', async (req, res) => {
   try {
     const f={};
@@ -58,7 +58,7 @@ router.delete('/:id', async (req, res) => {
     if(!sale.isPaid) await Shop.findByIdAndUpdate(sale.shopId, {$inc:{creditBalance:-(sale.qty*sale.price)}});
     res.json({status:'success', message:'Deleted.'});
   } catch(e){ res.status(400).json({status:'error', message:e.message}); }
-=======
+
 // Generate receipt number: RCT-YYYYMMDD-XXXX
 function genReceiptNo() {
   const d   = new Date();
@@ -148,7 +148,7 @@ router.delete('/:id', async (req, res) => {
     }
     res.json({ status:'success', message:'Sale deleted.' });
   } catch(e) { res.status(400).json({ status:'error', message: e.message }); }
->>>>>>> a50ac663ea68032a9b040b7c973b5a0b9334bfdf
+
 });
 
 export default router;

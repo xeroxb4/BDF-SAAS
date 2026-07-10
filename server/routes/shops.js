@@ -1,22 +1,22 @@
 import express from 'express';
-<<<<<<< HEAD
+
 import Shop from '../models/Shop.js';
 import ShopSale from '../models/ShopSale.js';
 import protect from '../middleware/auth.js';
 import scope from '../middleware/scopeCompany.js';
 import { audit } from './_crud.js';
-=======
+
 import protect  from '../middleware/auth.js';
 import scope    from '../middleware/scopeCompany.js';
 import { Shop, ShopSale, audit } from './_shared.js';
->>>>>>> a50ac663ea68032a9b040b7c973b5a0b9334bfdf
+
 
 const router = express.Router();
 router.use(protect, scope);
 
 router.get('/', async (req, res) => {
   try {
-<<<<<<< HEAD
+
     const f={isActive:true};
     if(req.scopedCompanyId) f.companyId=req.scopedCompanyId;
     if(req.query.distributorId) f.distributorId=req.query.distributorId;
@@ -52,7 +52,7 @@ router.patch('/:id/pay', async (req, res) => {
     res.json({status:'success', data:shop});
   } catch(e){ res.status(400).json({status:'error', message:e.message}); }
 });
-=======
+
     const filter = { isActive:true };
     if (req.scopedCompanyId)    filter.companyId     = req.scopedCompanyId;
     if (req.query.distributorId) filter.distributorId = req.query.distributorId;
@@ -135,5 +135,5 @@ router.patch('/:id/pay', async (req, res) => {
   } catch(e) { res.status(400).json({ status:'error', message:e.message }); }
 });
 
->>>>>>> a50ac663ea68032a9b040b7c973b5a0b9334bfdf
+
 export default router;

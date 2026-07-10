@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 import express from 'express';
 import protect from '../middleware/auth.js';
 import scope from '../middleware/scopeCompany.js';
@@ -31,7 +31,7 @@ export const proR=makeRouter(r=>{
 export const audR=makeRouter(r=>{
   r.get('/',async(req,res)=>{try{const f={};if(req.user.role!=='super_admin')f.companyId=req.companyId;else if(req.query.companyId)f.companyId=req.query.companyId;if(req.query.action)f.action=req.query.action.toUpperCase();const limit=Math.min(parseInt(req.query.limit)||100,500);const page=Math.max(parseInt(req.query.page)||1,1);const[logs,total]=await Promise.all([AuditLog.find(f).sort({createdAt:-1}).skip((page-1)*limit).limit(limit),AuditLog.countDocuments(f)]);res.json({status:'success',total,page,data:logs});}catch(e){res.status(500).json({status:'error',message:e.message});}});
 });
-=======
+
 import express    from 'express';
 import protect    from '../middleware/auth.js';
 import scope      from '../middleware/scopeCompany.js';
@@ -187,4 +187,4 @@ audR.get('/', async(req,res)=>{
 });
 
 export { regR, tarR, rpR, proR, audR };
->>>>>>> a50ac663ea68032a9b040b7c973b5a0b9334bfdf
+

@@ -436,7 +436,7 @@ textarea{resize:vertical;min-height:64px;}
   .product-card-img{height:110px;}
   .product-card-img img{height:110px;}
 }
-<<<<<<< HEAD
+
 
 /* ═══════════════════════════════════════════════════
    SALESPERSON MOBILE VIEW
@@ -766,5 +766,3 @@ table {
 .sp-view.active ~ * {
   display: none !important;
 }
-=======
->>>>>>> a50ac663ea68032a9b040b7c973b5a0b9334bfdf

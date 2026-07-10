@@ -1,21 +1,21 @@
-<<<<<<< HEAD
+
 import express from 'express';
 import Dispatch from '../models/Dispatch.js';
 import protect from '../middleware/auth.js';
 import scope from '../middleware/scopeCompany.js';
-=======
+
 import express  from 'express';
 import protect  from '../middleware/auth.js';
 import scope    from '../middleware/scopeCompany.js';
 import { Dispatch, audit } from './_shared.js';
->>>>>>> a50ac663ea68032a9b040b7c973b5a0b9334bfdf
+
 
 const router = express.Router();
 router.use(protect, scope);
 
 router.get('/', async (req, res) => {
   try {
-<<<<<<< HEAD
+
     const f={};
     if(req.scopedCompanyId) f.companyId=req.scopedCompanyId;
     if(req.query.distributorId) f.distributorId=req.query.distributorId;
@@ -44,7 +44,7 @@ router.delete('/:id', async (req, res) => {
     res.json({status:'success', message:'Deleted.'});
   } catch(e){ res.status(400).json({status:'error', message:e.message}); }
 });
-=======
+
     const filter = {};
     if (req.scopedCompanyId)    filter.companyId     = req.scopedCompanyId;
     if (req.query.distributorId) filter.distributorId = req.query.distributorId;
@@ -90,5 +90,5 @@ router.delete('/:id', async (req, res) => {
   } catch(e) { res.status(400).json({ status:'error', message:e.message }); }
 });
 
->>>>>>> a50ac663ea68032a9b040b7c973b5a0b9334bfdf
+
 export default router;

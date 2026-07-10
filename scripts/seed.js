@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 import mongoose from 'mongoose';
 import Company from '../server/models/Company.js';
 import User from '../server/models/User.js';
@@ -19,7 +19,7 @@ async function seed() {
   await mongoose.connect(URI);
   console.log('\u2705  Connected to MongoDB');
 
-=======
+
 /**
  * Seed Script — run with: npm run seed
  * Creates: 1 super_admin + 2 demo companies with full data sets
@@ -46,14 +46,14 @@ async function seed() {
   console.log('✅  Connected to MongoDB');
 
   // ── WIPE existing demo data ──────────────────────────────────────────────
->>>>>>> a50ac663ea68032a9b040b7c973b5a0b9334bfdf
+
   await Promise.all([
     Company.deleteMany({}), User.deleteMany({}), Region.deleteMany({}),
     Distributor.deleteMany({}), Agent.deleteMany({}), Product.deleteMany({}),
     Stock.deleteMany({}), Shop.deleteMany({}), Dispatch.deleteMany({}),
     Promotion.deleteMany({}), SalesTarget.deleteMany({}),
   ]);
-<<<<<<< HEAD
+
   console.log('\ud83e\uddf9  Cleared existing data');
 
   // SUPER ADMIN
@@ -189,7 +189,7 @@ async function seed() {
   const now=new Date();
   for (const agent of allAgents) {
     await SalesTarget.create({ companyId:bdf._id, distributorId:agent.distributorId, agentId:agent._id, month:now.getMonth()+1, year:now.getFullYear(), monthlyTarget:15000, weeklyTargets:{wk1:3000,wk2:3000,wk3:3500,wk4:3000,wk5:2500} });
-=======
+
   console.log('🧹  Cleared existing data');
 
   // ── SUPER ADMIN ──────────────────────────────────────────────────────────
@@ -371,12 +371,12 @@ async function seed() {
       weeklyTargets:{ wk1:3000, wk2:3000, wk3:3500, wk4:3000, wk5:2500 },
       createdBy:bdfAdmin._id,
     });
->>>>>>> a50ac663ea68032a9b040b7c973b5a0b9334bfdf
+
   }
 
   // AVC Promotion
   await Promotion.create({
-<<<<<<< HEAD
+
     companyId:bdf._id, name:'Nivea AVC 2025', code:'NIVAVC25',
     description:'Annual Volume Commitment - outlet loyalty reward',
     tiers:[
@@ -427,7 +427,7 @@ async function seed() {
   console.log('  Unilever       \u2192  uni_admin   /  Uni@1234');
   console.log('\u2500'.repeat(55));
   console.log('');
-=======
+
     companyId: bdf._id, name:'Nivea AVC 2025', code:'NIVAVC25',
     description:'Annual Volume Commitment promotion for outlet loyalty',
     tiers:[
@@ -497,13 +497,13 @@ async function seed() {
   console.log('  Beiersdorf     →  bdf_admin   /  Bdf@1234');
   console.log('  Unilever       →  uni_admin   /  Uni@1234');
   console.log('─────────────────────────────────────────────────────────\n');
->>>>>>> a50ac663ea68032a9b040b7c973b5a0b9334bfdf
+
   await mongoose.disconnect();
   process.exit(0);
 }
 
-<<<<<<< HEAD
+
 seed().catch(err => { console.error('\u274c Seed failed:', err.message); process.exit(1); });
-=======
+
 seed().catch(err => { console.error('❌  Seed failed:', err); process.exit(1); });
->>>>>>> a50ac663ea68032a9b040b7c973b5a0b9334bfdf
+

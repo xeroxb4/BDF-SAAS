@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
@@ -108,7 +108,7 @@ router.get('/users', protect, async (req, res) => {
     const users = await User.find(filter).select('-password').sort({fullName:1});
     res.json({status:'success', data:users});
   } catch(err){ res.status(500).json({status:'error', message:err.message}); }
-=======
+
 import express  from 'express';
 import jwt      from 'jsonwebtoken';
 import User     from '../models/User.js';
@@ -242,7 +242,7 @@ router.get('/users', protect, async (req, res) => {
     const users = await User.find(filter).select('-password').sort({ fullName: 1 });
     res.json({ status:'success', data: users });
   } catch(err) { res.status(500).json({ status:'error', message: err.message }); }
->>>>>>> a50ac663ea68032a9b040b7c973b5a0b9334bfdf
+
 });
 
 export default router;

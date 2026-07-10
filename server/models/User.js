@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-<<<<<<< HEAD
+
 import bcrypt from 'bcryptjs';
 const s=new mongoose.Schema({
   username:     { type: String, required: true, unique: true, trim: true, lowercase: true },
@@ -18,7 +18,7 @@ s.pre('save',async function(next){if(!this.isModified('password'))return next();
 s.methods.correctPassword=async function(e){return bcrypt.compare(e,this.password);};
 s.index({legacyId:1});
 export default mongoose.model('User',s);
-=======
+
 import bcrypt   from 'bcryptjs';
 
 const userSchema = new mongoose.Schema({
@@ -46,4 +46,4 @@ userSchema.methods.correctPassword = async function(entered) {
 };
 
 export default mongoose.model('User', userSchema);
->>>>>>> a50ac663ea68032a9b040b7c973b5a0b9334bfdf
+
