@@ -5,4 +5,10 @@ Thumbs.db
 *.log
 logs/
 dist/
+<<<<<<< HEAD
 pids/
+=======
+build/
+pids/
+*.pid
+>>>>>>> a50ac663ea68032a9b040b7c973b5a0b9334bfdf

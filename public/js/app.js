@@ -27,6 +27,7 @@ let activePage  = 'dashboard';
 
 /* ─── API ──────────────────────────────────────────── */
 async function api(method, path, body) {
+<<<<<<< HEAD
   // Always read token fresh from localStorage in case it was set after page load
   if (!authToken) authToken = localStorage.getItem('_tk');
   const opts = { method, headers: { 'Content-Type':'application/json' } };
@@ -51,6 +52,16 @@ async function api(method, path, body) {
     }
     throw e;
   }
+=======
+  const opts = { method, headers: { 'Content-Type':'application/json' } };
+  if (authToken) opts.headers['Authorization'] = 'Bearer ' + authToken;
+  if (body) opts.body = JSON.stringify(body);
+  const res  = await fetch('/api' + path, opts);
+  const data = await res.json();
+  if (res.status === 401) { showLogin(); return null; }
+  if (!res.ok) throw new Error(data.message || 'Server error');
+  return data;
+>>>>>>> a50ac663ea68032a9b040b7c973b5a0b9334bfdf
 }
 
 /* ═══ TOAST & BANNER ══════════════════════════════════ */
@@ -131,7 +142,10 @@ function sw(id, el, label) {
   const lbl = document.getElementById('topbar-section');
   if (lbl) lbl.textContent = label || id;
   activePage = id;
+<<<<<<< HEAD
   sessionStorage.setItem('activePage', id);
+=======
+>>>>>>> a50ac663ea68032a9b040b7c973b5a0b9334bfdf
   closeSidebar();
 }
 
@@ -164,6 +178,7 @@ async function doLogin() {
   try {
     const data = await api('POST', '/auth/login', { username:user, password:pass });
     if (!data) return;
+<<<<<<< HEAD
     authToken      = data.token;
     currentUser    = data.data.user;
     currentCompany = currentUser.company || null;
@@ -183,6 +198,17 @@ async function doLogin() {
       buildSidebar();
       toast('Welcome back, ' + currentUser.fullName + '!', 'ok');
     }
+=======
+    authToken    = data.token;
+    currentUser  = data.data.user;
+    currentCompany = currentUser.company || null;
+    localStorage.setItem('_tk', authToken);
+    applyCompanyTheme(currentCompany);
+    hideLogin();
+    await loadAllData();
+    buildSidebar();
+    toast(`Welcome back, ${currentUser.fullName}!`, 'ok');
+>>>>>>> a50ac663ea68032a9b040b7c973b5a0b9334bfdf
   } catch(e) {
     err.textContent = e.message; err.classList.add('show');
   } finally { btn.disabled = false; btn.textContent = 'Sign In'; }
@@ -239,6 +265,7 @@ async function doLogout() {
 }
 
 async function checkAuth() {
+<<<<<<< HEAD
   // Always read token from localStorage on page load
   authToken = localStorage.getItem('_tk');
   if (!authToken) { showLogin(); return; }
@@ -295,6 +322,19 @@ async function checkAuth() {
       showLogin();
     }
   }
+=======
+  if (!authToken) { showLogin(); return; }
+  try {
+    const data = await api('GET','/auth/me');
+    if (!data) { showLogin(); return; }
+    currentUser    = data.data.user;
+    currentCompany = currentUser.companyId || null;
+    applyCompanyTheme(currentCompany);
+    hideLogin();
+    await loadAllData();
+    buildSidebar();
+  } catch(_) { showLogin(); }
+>>>>>>> a50ac663ea68032a9b040b7c973b5a0b9334bfdf
 }
 
 /* ─── COMPANY THEME ────────────────────────────────── */
@@ -324,12 +364,15 @@ function applyCompanyTheme(company) {
 }
 
 /* ─── BUILD SIDEBAR BASED ON ROLE ──────────────────── */
+<<<<<<< HEAD
 function goHome() {
   const firstNav = document.querySelector('#sidebar-nav .nav-item');
   const firstSection = document.querySelector('.section');
   if (firstSection) sw(firstSection.id, firstNav, 'Dashboard');
 }
 
+=======
+>>>>>>> a50ac663ea68032a9b040b7c973b5a0b9334bfdf
 function buildSidebar() {
   const role = currentUser?.role;
   const sb   = document.getElementById('sidebar-nav');
@@ -352,7 +395,10 @@ function buildSidebar() {
       <div class="nav-item" onclick="sw('shops-section',this,'Shops')"><i class="ti ti-building"></i> Shops</div>
       <div class="nav-item" onclick="sw('stock-section',this,'Stock')"><i class="ti ti-package"></i> Stock Levels</div>
       <div class="nav-item" onclick="sw('dispatch-section',this,'Dispatch')"><i class="ti ti-truck-delivery"></i> Dispatch</div>
+<<<<<<< HEAD
       <div class="nav-item" onclick="window.openTargetModal && window.openTargetModal()"><i class="ti ti-target"></i> Set Targets</div>
+=======
+>>>>>>> a50ac663ea68032a9b040b7c973b5a0b9334bfdf
       <div class="sidebar-label">Intelligence</div>
       <div class="nav-item" onclick="sw('products-section',this,'Products')"><i class="ti ti-box"></i> Products</div>
       <div class="nav-item" onclick="sw('reports-section',this,'Reports')"><i class="ti ti-chart-bar"></i> Reports</div>
@@ -414,6 +460,7 @@ function distStockVal(distId) {
   return products.reduce((s,p) => s + getQty(distId, p._id) * p.price, 0);
 }
 function agentStats(agentId) {
+<<<<<<< HEAD
   if (!agentId) return { units:0, val:0, conf:0, pend:0 };
   const ds = dispatches.filter(d => String(d.agentId?._id||d.agentId) === String(agentId));
   const val  = ds.reduce((s,d) => s+(d.qty||0)*(d.price||0), 0);
@@ -425,6 +472,15 @@ function agentDistId(a){
   if (!a) return null;
   return a.distributorId?._id || a.distributorId || null; 
 }
+=======
+  const ds = dispatches.filter(d => (d.agentId?._id||d.agentId) === agentId);
+  const val  = ds.reduce((s,d) => s+d.qty*d.price, 0);
+  const conf = ds.filter(d=>d.confirmed).reduce((s,d) => s+d.qty*d.price, 0);
+  return { units: ds.reduce((s,d)=>s+d.qty,0), val, conf, pend:val-conf };
+}
+function distId(d)     { return d._id || d; }
+function agentDistId(a){ return a.distributorId?._id || a.distributorId; }
+>>>>>>> a50ac663ea68032a9b040b7c973b5a0b9334bfdf
 
 /* ═══ SUPER ADMIN DASHBOARD ══════════════════════════ */
 function renderSuperDashboard() {
@@ -2082,6 +2138,7 @@ openEditShopModal = function(id) {
   if (latEl)   latEl.value   = sh.lat || '';
   if (lngEl)   lngEl.value   = sh.lng || '';
 };
+<<<<<<< HEAD
 
 /* ═══════════════════════════════════════════════════
    SALESPERSON VIEW — COMPLETE IMPLEMENTATION
@@ -3140,6 +3197,11 @@ async function saveAllTargets() {
 Object.assign(window, {
   // Auth
   doLogin, doRegister, doLogout, showRegisterForm, goHome,
+=======
+Object.assign(window, {
+  // Auth
+  doLogin, doRegister, doLogout, showRegisterForm,
+>>>>>>> a50ac663ea68032a9b040b7c973b5a0b9334bfdf
   // Nav
   sw, toggleSidebar, closeSidebar,
   // Modals
@@ -3175,6 +3237,7 @@ Object.assign(window, {
   // Sales & receipts
   openSaleModal, selectPayMethod, autoFillSalePrice, updateSaleTotal,
   submitSale, showReceiptModal, printReceipt,
+<<<<<<< HEAD
   // Salesperson view
   showSpView, hideSpView, spNav, spSelectPay, toggleSpTheme,
   spAddProductRow, spRemoveRow, spAutoPrice, spCalcTotal, spFilterProdsByCategory,
@@ -3183,13 +3246,18 @@ Object.assign(window, {
   spSyncData, spExportExcel,
   // Targets
   openTargetModal, loadTargetAgentRows, saveAllTargets, spAutoFillWeekly,
+=======
+>>>>>>> a50ac663ea68032a9b040b7c973b5a0b9334bfdf
   // Export
   exportAllExcel,
 });
 
 /* ═══ INIT ════════════════════════════════════════════ */
+<<<<<<< HEAD
 // Run after window.assign so all functions are globally available
 // Init — runs immediately after window functions are assigned
+=======
+>>>>>>> a50ac663ea68032a9b040b7c973b5a0b9334bfdf
 const dateEl = document.getElementById('d-date');
 if (dateEl) dateEl.value = today();
 checkAuth();

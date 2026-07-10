@@ -1,5 +1,10 @@
 import mongoose from 'mongoose';
+<<<<<<< HEAD
 const s=new mongoose.Schema({
+=======
+
+const agentSchema = new mongoose.Schema({
+>>>>>>> a50ac663ea68032a9b040b7c973b5a0b9334bfdf
   companyId:     { type: mongoose.Schema.Types.ObjectId, ref: 'Company',     required: true },
   distributorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Distributor', required: true },
   name:          { type: String, required: true, trim: true },
@@ -10,9 +15,17 @@ const s=new mongoose.Schema({
   address:       { type: String, trim: true },
   emergency:     { type: String, trim: true },
   isActive:      { type: Boolean, default: true },
+<<<<<<< HEAD
   legacyId:      { type: String },
   createdBy:     { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 },{timestamps:true});
 s.index({companyId:1,distributorId:1});
 s.index({legacyId:1});
 export default mongoose.model('Agent',s);
+=======
+  createdBy:     { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+}, { timestamps: true });
+
+agentSchema.index({ companyId: 1, distributorId: 1 });
+export default mongoose.model('Agent', agentSchema);
+>>>>>>> a50ac663ea68032a9b040b7c973b5a0b9334bfdf
