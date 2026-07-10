@@ -53,15 +53,6 @@ async function api(method, path, body) {
     throw e;
   }
 
-  const opts = { method, headers: { 'Content-Type':'application/json' } };
-  if (authToken) opts.headers['Authorization'] = 'Bearer ' + authToken;
-  if (body) opts.body = JSON.stringify(body);
-  const res  = await fetch('/api' + path, opts);
-  const data = await res.json();
-  if (res.status === 401) { showLogin(); return null; }
-  if (!res.ok) throw new Error(data.message || 'Server error');
-  return data;
-
 }
 
 /* ═══ TOAST & BANNER ══════════════════════════════════ */
