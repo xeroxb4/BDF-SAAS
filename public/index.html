@@ -1130,69 +1130,129 @@
     </div>
   </div>
 
-  <!-- Populate modal distributor/agent selects on open -->
   <script>
-    document.getElementById('add-agent-modal').addEventListener('click', function (e) {
-      if (e.target === this) return;
+/* =================================
+   Populate Agent Modal Dropdowns
+================================= */
 
-      // Populate modal dropdown
-      const modalSel = document.getElementById('ma-dist');
+function populateAgentModal() {
+    const modalSel = document.getElementById('ma-dist');
 
-      if (modalSel && modalSel.options.length <= 1) {
+    if (modalSel) {
+        modalSel.innerHTML = '<option value="">Select...</option>';
+
         distributors.forEach(d => {
-          modalSel.add(new Option(d.name, d._id));
+            modalSel.add(new Option(d.name, d._id));
         });
 
         console.log('Modal distributor options:', modalSel.options.length);
-      }
+    }
+}
 
-      // Populate setup form dropdown
-      const setupSel = document.getElementById('s-agent-dist');
+/* =================================
+   Populate Agent Setup Dropdown
+================================= */
 
-      if (setupSel) {
+function populateAgentSetup() {
+    const setupSel = document.getElementById('s-agent-dist');
+
+    if (setupSel) {
         setupSel.innerHTML = '<option value="">Select...</option>';
 
         distributors.forEach(d => {
-          setupSel.add(new Option(d.name, d._id));
+            setupSel.add(new Option(d.name, d._id));
         });
 
         console.log('Setup distributor options:', setupSel.options.length);
-      }
-    });
+    }
+}
+
+/* =================================
+   Populate Shop Modal Dropdowns
+================================= */
+
+function populateShopModal() {
+
+    const sd = document.getElementById('msh-dist');
+    const sa = document.getElementById('msh-agent');
 
 
-    document.getElementById('add-shop-modal').addEventListener('click', function (e) {
-      if (e.target === this) return;
+    if (sd) {
+        sd.innerHTML = '<option value="">Select...</option>';
 
-      const sd = document.getElementById('msh-dist');
-      const sa = document.getElementById('msh-agent');
-
-      if (sd && sd.options.length <= 1) {
         distributors.forEach(d => {
-          sd.add(new Option(d.name, d._id));
+            sd.add(new Option(d.name, d._id));
         });
-      }
+    }
 
-      if (sa && sa.options.length <= 1) {
+
+    if (sa) {
+        sa.innerHTML = '<option value="">Select...</option>';
+
         agents.forEach(a => {
-          sa.add(new Option(`${a.name} (${a.role})`, a._id));
+            sa.add(new Option(`${a.name} (${a.role})`, a._id));
         });
-      }
-    });
+    }
+}
+
+/* =================================
+   OPEN MODALS
+================================= */
+
+function openAddAgentModal() {
+
+    populateAgentModal();
+    populateAgentSetup();
+
+    document.getElementById('add-agent-modal').style.display = 'block';
+}
+
+function openAddShopModal() {
+
+    populateShopModal();
+
+    document.getElementById('add-shop-modal').style.display = 'block';
+}
+
+/* =================================
+   CLOSE MODALS
+================================= */
+
+document.getElementById('add-agent-modal').addEventListener('click', function(e) {
+
+    if (e.target === this) {
+        this.style.display = 'none';
+    }
+
+});
 
 
-    // Two-column grid responsive
-    document.querySelectorAll('.two-col').forEach(el => {
-      const mq = window.matchMedia('(max-width:600px)');
+document.getElementById('add-shop-modal').addEventListener('click', function(e) {
 
-      const apply = () => {
+    if (e.target === this) {
+        this.style.display = 'none';
+    }
+
+});
+
+/* =================================
+   Responsive Two Column Layout
+================================= */
+
+document.querySelectorAll('.two-col').forEach(el => {
+
+    const mq = window.matchMedia('(max-width:600px)');
+
+    const apply = () => {
         el.style.gridTemplateColumns = mq.matches ? '1fr' : '1fr 1fr';
-      };
+    };
 
-      mq.addEventListener('change', apply);
-      apply();
-    });
-  </script>
+    mq.addEventListener('change', apply);
+
+    apply();
+
+});
+</script>
 
   <!-- ═══ LOG SALE MODAL ═══ -->
   <div class="modal-overlay" id="sale-modal">
