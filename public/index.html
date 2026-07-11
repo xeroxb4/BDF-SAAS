@@ -952,12 +952,21 @@
 <!-- Populate modal distributor/agent selects on open -->
 <script>
 document.getElementById('add-agent-modal').addEventListener('click', function(e){
-  if(e.target===this){return;}
-  const sel=document.getElementById('ma-dist');
-  if(sel&&!sel.options.length){
-    distributors.forEach(d=>sel.add(new Option(d.name,d._id)));
+  if (e.target === this) return;
+
+  const sel = document.getElementById('ma-dist');
+
+  console.log(distributors);
+
+  if (sel) {
+    sel.innerHTML = '<option value="">Select...</option>';
+
+    distributors.forEach(d => {
+      sel.add(new Option(d.name, d._id));
+    });
   }
 });
+
 document.getElementById('add-shop-modal').addEventListener('click', function(e){
   if(e.target===this){return;}
   const sd=document.getElementById('msh-dist');
@@ -965,11 +974,13 @@ document.getElementById('add-shop-modal').addEventListener('click', function(e){
   if(sd&&sd.options.length<=1) distributors.forEach(d=>sd.add(new Option(d.name,d._id)));
   if(sa&&sa.options.length<=1) agents.forEach(a=>sa.add(new Option(`${a.name} (${a.role})`,a._id)));
 });
+
 // Two-column grid responsive
 document.querySelectorAll('.two-col').forEach(el=>{
   const mq=window.matchMedia('(max-width:600px)');
   const apply=()=>el.style.gridTemplateColumns=mq.matches?'1fr':'1fr 1fr';
-  mq.addEventListener('change',apply); apply();
+  mq.addEventListener('change',apply);
+  apply();
 });
 </script>
 

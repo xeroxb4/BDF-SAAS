@@ -27,7 +27,8 @@ export default async (req, res, next) => {
       .populate(
         'companyId',
         'name slug accentColor logo currency isActive'
-      );
+      )
+      .populate('agentId', 'name distributorId');
 
 
     if (!user || !user.isActive) {

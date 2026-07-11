@@ -23,6 +23,7 @@ router.post('/', async (req, res) => {
     res.status(201).json({status:'success', data:doc});
   } catch(e){ res.status(400).json({status:'error', message:e.message}); }
 });
+
 router.put('/:id', async (req, res) => {
   try {
     const doc=await Distributor.findOneAndUpdate({_id:req.params.id, companyId:req.scopedCompanyId}, req.body, {new:true, runValidators:true});
@@ -39,40 +40,6 @@ router.delete('/:id', async (req, res) => {
     res.json({status:'success', message:'Removed.'});
   } catch(e){ res.status(400).json({status:'error', message:e.message}); }
 });
-
-    
-
-// router.post('/', async (req, res) => {
-//   try {
-//     const doc = await Distributor.create({ ...req.body, companyId: req.scopedCompanyId, createdBy: req.user._id });
-//     await audit(req,'CREATE','distributor',doc._id,`Created distributor: ${doc.name}`);
-//     res.status(201).json({ status:'success', data: doc });
-//   } catch(e) { res.status(400).json({ status:'error', message:e.message }); }
-// });
-
-// router.put('/:id', async (req, res) => {
-//   try {
-//     const doc = await Distributor.findOneAndUpdate(
-//       { _id:req.params.id, companyId:req.scopedCompanyId },
-//       req.body, { new:true, runValidators:true }
-//     );
-//     if (!doc) return res.status(404).json({ status:'error', message:'Not found.' });
-//     await audit(req,'UPDATE','distributor',doc._id,`Updated distributor: ${doc.name}`);
-//     res.json({ status:'success', data: doc });
-//   } catch(e) { res.status(400).json({ status:'error', message:e.message }); }
-// });
-
-// router.delete('/:id', async (req, res) => {
-//   try {
-//     const doc = await Distributor.findOneAndUpdate(
-//       { _id:req.params.id, companyId:req.scopedCompanyId },
-//       { isActive:false }, { new:true }
-//     );
-//     if (!doc) return res.status(404).json({ status:'error', message:'Not found.' });
-//     await audit(req,'DELETE','distributor',doc._id,`Removed distributor: ${doc.name}`);
-//     res.json({ status:'success', message:'Distributor removed.' });
-//   } catch(e) { res.status(400).json({ status:'error', message:e.message }); }
-// });
 
 
 export default router;
