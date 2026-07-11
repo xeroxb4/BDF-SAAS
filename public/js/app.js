@@ -461,14 +461,7 @@ function agentDistId(a){
   return a.distributorId?._id || a.distributorId || null; 
 }
 
-  const ds = dispatches.filter(d => (d.agentId?._id||d.agentId) === agentId);
-  const val  = ds.reduce((s,d) => s+d.qty*d.price, 0);
-  const conf = ds.filter(d=>d.confirmed).reduce((s,d) => s+d.qty*d.price, 0);
-  return { units: ds.reduce((s,d)=>s+d.qty,0), val, conf, pend:val-conf };
-}
-function distId(d)     { return d._id || d; }
-function agentDistId(a){ return a.distributorId?._id || a.distributorId; }
-
+ 
 
 /* ═══ SUPER ADMIN DASHBOARD ══════════════════════════ */
 function renderSuperDashboard() {
