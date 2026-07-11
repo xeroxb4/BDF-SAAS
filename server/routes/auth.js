@@ -52,7 +52,7 @@ router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ status: 'error', message: 'Username and password required.' });
-    const user = await User.findOne({ username: username.toLowerCase().trim() }).populate('companyId', 'name slug accentColor logo currency isActive');
+    const user = await User.findOne({ username: username.toLowerCase().trim() }).populate('companyId', 'name slug accentColor logo currency isActive').populate('agentId', 'name distributorId');
     if (!user || !user.isActive) return res.status(401).json({ status: 'error', message: 'Incorrect username or password.' });
     const ok = await user.correctPassword(password);
     if (!ok) return res.status(401).json({ status: 'error', message: 'Incorrect username or password.' });
