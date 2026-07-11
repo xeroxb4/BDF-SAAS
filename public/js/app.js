@@ -3179,9 +3179,6 @@ Object.assign(window, {
   // Auth
   doLogin, doRegister, doLogout, showRegisterForm, goHome,
 
-Object.assign(window, {
-  // Auth
-  doLogin, doRegister, doLogout, showRegisterForm,
 
   // Nav
   sw, toggleSidebar, closeSidebar,
@@ -3227,7 +3224,7 @@ Object.assign(window, {
   spSyncData, spExportExcel,
   // Targets
   openTargetModal, loadTargetAgentRows, saveAllTargets, spAutoFillWeekly,
-f
+
   // Export
   exportAllExcel,
 });
