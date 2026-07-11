@@ -964,6 +964,7 @@ document.getElementById('add-agent-modal').addEventListener('click', function(e)
     distributors.forEach(d => {
       sel.add(new Option(d.name, d._id));
     });
+    console.log('Options:', sel.options.length);
   }
 });
 
